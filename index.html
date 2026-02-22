@@ -9,13 +9,13 @@
 <body style="margin:0; overflow:hidden;">
 
   <a-scene
-    background="color: #dfe9f3"
+    background="color: #7F7F7FFF"
     renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
     shadow="type: pcfsoft">
 
     <!-- Assets -->
     <a-assets>
-      <a-asset-item id="troncos" src="assets/troncos.glb"></a-asset-item>
+      <a-asset-item id="troncos" src="assets/tronco.glb"></a-asset-item>
       <a-asset-item id="ramas" src="assets/ramas.glb"></a-asset-item>
       <a-asset-item id="hongos" src="assets/hongos.glb"></a-asset-item>
     </a-assets>
@@ -29,7 +29,7 @@
     </a-light>
 
     <!-- Modelos -->
-    <a-entity gltf-model="#troncos"
+    <a-entity gltf-model="#tronco"
               position="0 0 -3"
               scale="1 1 1">
     </a-entity>
@@ -44,14 +44,6 @@
               scale="1 1 1">
     </a-entity>
 
-    <!-- Piso opcional -->
-    <a-plane rotation="-90 0 0"
-             width="10"
-             height="10"
-             color="#cfd8dc"
-             shadow="receive: true">
-    </a-plane>
-
     <!-- Cámara -->
     <a-entity camera
               position="0 1.6 0"
@@ -62,4 +54,5 @@
   </a-scene>
 
 </body>
+
 </html>
