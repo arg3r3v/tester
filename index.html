@@ -66,50 +66,60 @@ document.addEventListener('DOMContentLoaded', () => {
   const rig = document.querySelector('#rig');
   const player = document.querySelector('#player');
 
-  let lastPosition = new THREE.Vector3();
+  let keys = {};
+  let direction = new THREE.Vector3();
   let moving = false;
 
+  const speed = 0.06;
+  const rotationSpeed = 0.15;
+
+  window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+  window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
   player.addEventListener('model-loaded', () => {
-
-    // Pausar animación al iniciar
     player.components['animation-mixer'].pause();
+    tick();
+  });
 
-    rig.object3D.getWorldPosition(lastPosition);
+  function tick() {
 
-    function checkMovement() {
+    direction.set(0, 0, 0);
 
-      const currentPosition = new THREE.Vector3();
-      rig.object3D.getWorldPosition(currentPosition);
+    if (keys['w']) direction.z -= 1;
+    if (keys['s']) direction.z += 1;
+    if (keys['a']) direction.x -= 1;
+    if (keys['d']) direction.x += 1;
 
-      const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
-      const distance = direction.length();
+    if (direction.length() > 0) {
 
-      if (distance > 0.001) {
+      direction.normalize();
 
-        if (!moving) {
-          player.components['animation-mixer'].play();
-          moving = true;
-        }
+      // Movimiento en mundo (NO relativo a cámara)
+      rig.object3D.position.x += direction.x * speed;
+      rig.object3D.position.z += direction.z * speed;
 
-        // Rotar hacia dirección de movimiento
-        const angle = Math.atan2(direction.x, direction.z);
-        player.object3D.rotation.y = angle + Math.PI;
+      // Rotación suave hacia dirección de movimiento
+      const targetRotation = Math.atan2(direction.x, direction.z);
 
-      } else {
+      player.object3D.rotation.y +=
+        (targetRotation - player.object3D.rotation.y) * rotationSpeed;
 
-        if (moving) {
-          player.components['animation-mixer'].pause();
-          moving = false;
-        }
-
+      if (!moving) {
+        player.components['animation-mixer'].play();
+        moving = true;
       }
 
-      lastPosition.copy(currentPosition);
-      requestAnimationFrame(checkMovement);
+    } else {
+
+      if (moving) {
+        player.components['animation-mixer'].pause();
+        moving = false;
+      }
+
     }
 
-    checkMovement();
-  });
+    requestAnimationFrame(tick);
+  }
 
 });
 </script>
@@ -117,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
 
 
