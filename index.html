@@ -66,73 +66,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const rig = document.querySelector('#rig');
   const player = document.querySelector('#player');
-  const cameraPivot = document.querySelector('#cameraPivot');
 
-  let keys = {};
+  let lastPosition = new THREE.Vector3();
   let moving = false;
-
-  const speed = 0.06;
-  const rotationSpeed = 0.15;
-
-  window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-  window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
-  player.addEventListener('model-loaded', () => {
-    player.components['animation-mixer'].pause();
-    tick();
-  });
 
   function angleDifference(a, b) {
     let diff = b - a;
     return Math.atan2(Math.sin(diff), Math.cos(diff));
   }
 
-  function tick() {
+  player.addEventListener('model-loaded', () => {
 
-    let dirX = 0;
-    let dirZ = 0;
+    player.components['animation-mixer'].pause();
 
-    if (keys['w']) dirZ -= 1;
-    if (keys['s']) dirZ += 1;
-    if (keys['a']) dirX -= 1;
-    if (keys['d']) dirX += 1;
+    rig.object3D.getWorldPosition(lastPosition);
 
-    if (dirX !== 0 || dirZ !== 0) {
+    function tick() {
 
-      const length = Math.hypot(dirX, dirZ);
-      dirX /= length;
-      dirZ /= length;
+      const currentPosition = new THREE.Vector3();
+      rig.object3D.getWorldPosition(currentPosition);
 
-      // Movimiento relativo a cámara
-      const camY = cameraPivot.object3D.rotation.y;
-      const moveAngle = Math.atan2(dirX, dirZ) + camY;
+      const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
+      const distance = direction.length();
 
-      rig.object3D.position.x += Math.sin(moveAngle) * speed;
-      rig.object3D.position.z += Math.cos(moveAngle) * speed;
+      if (distance > 0.0001) {
 
-      // Rotación suave correcta
-      const targetRotation = moveAngle + Math.PI;
-      const currentRotation = player.object3D.rotation.y;
-      const diff = angleDifference(currentRotation, targetRotation);
+        // Dirección real del movimiento
+        const moveAngle = Math.atan2(direction.x, direction.z);
 
-      player.object3D.rotation.y += diff * rotationSpeed;
+        // Ajuste si tu modelo mira al revés
+        const targetRotation = moveAngle + Math.PI;
 
-      if (!moving) {
-        player.components['animation-mixer'].play();
-        moving = true;
+        const currentRotation = player.object3D.rotation.y;
+        const diff = angleDifference(currentRotation, targetRotation);
+
+        // Rotación suave
+        player.object3D.rotation.y += diff * 0.15;
+
+        if (!moving) {
+          player.components['animation-mixer'].play();
+          moving = true;
+        }
+
+      } else {
+
+        if (moving) {
+          player.components['animation-mixer'].pause();
+          moving = false;
+        }
+
       }
 
-    } else {
-
-      if (moving) {
-        player.components['animation-mixer'].pause();
-        moving = false;
-      }
-
+      lastPosition.copy(currentPosition);
+      requestAnimationFrame(tick);
     }
 
-    requestAnimationFrame(tick);
-  }
+    tick();
+  });
 
 });
 </script>
@@ -140,5 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
 
