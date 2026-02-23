@@ -62,139 +62,130 @@
   </a-scene>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', () => {
 
-  const rig = document.querySelector('#rig');
-  const player = document.querySelector('#player');
+  const scene = document.querySelector('a-scene');
 
-  let lastPosition = new THREE.Vector3();
-  let moving = false;
+  scene.addEventListener('loaded', () => {
 
-  function angleDifference(a, b) {
-    let diff = b - a;
-    return Math.atan2(Math.sin(diff), Math.cos(diff));
-  }
+    const rig = document.querySelector('#rig');
+    const player = document.querySelector('#player');
+    const pivot = document.querySelector('#cameraPivot');
 
-  player.addEventListener('model-loaded', () => {
+    /* --------------------------
+       ROTACIÓN DEL PERSONAJE
+    ---------------------------*/
 
-    player.components['animation-mixer'].pause();
+    let lastPosition = new THREE.Vector3();
+    let moving = false;
 
-    rig.object3D.getWorldPosition(lastPosition);
+    function angleDifference(a, b) {
+      let diff = b - a;
+      return Math.atan2(Math.sin(diff), Math.cos(diff));
+    }
 
-    function tick() {
+    player.addEventListener('model-loaded', () => {
 
-      const currentPosition = new THREE.Vector3();
-      rig.object3D.getWorldPosition(currentPosition);
+      player.components['animation-mixer'].pause();
+      rig.object3D.getWorldPosition(lastPosition);
 
-      const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
-      const distance = direction.length();
+      function tick() {
 
-      if (distance > 0.0001) {
+        const currentPosition = new THREE.Vector3();
+        rig.object3D.getWorldPosition(currentPosition);
 
-        // Dirección real del movimiento
-        const moveAngle = Math.atan2(direction.x, direction.z);
+        const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
+        const distance = direction.length();
 
-        // Ajuste si tu modelo mira al revés
-        const targetRotation = moveAngle + Math.PI;
+        if (distance > 0.0001) {
 
-        const currentRotation = player.object3D.rotation.y;
-        const diff = angleDifference(currentRotation, targetRotation);
+          const moveAngle = Math.atan2(direction.x, direction.z);
+          const targetRotation = moveAngle + Math.PI;
 
-        // Rotación suave
-        player.object3D.rotation.y += diff * 0.15;
+          const currentRotation = player.object3D.rotation.y;
+          const diff = angleDifference(currentRotation, targetRotation);
 
-        if (!moving) {
-          player.components['animation-mixer'].play();
-          moving = true;
-        }
+          player.object3D.rotation.y += diff * 0.15;
 
-      } else {
+          if (!moving) {
+            player.components['animation-mixer'].play();
+            moving = true;
+          }
 
-        if (moving) {
+        } else if (moving) {
+
           player.components['animation-mixer'].pause();
           moving = false;
         }
 
+        lastPosition.copy(currentPosition);
+        requestAnimationFrame(tick);
       }
 
-      lastPosition.copy(currentPosition);
-      requestAnimationFrame(tick);
+      tick();
+    });
+
+    /* --------------------------
+       CÁMARA ORBITAL REAL
+    ---------------------------*/
+
+    let isDragging = false;
+    let previousX = 0;
+    let previousY = 0;
+
+    let yaw = 0;
+    let pitch = 0;
+
+    const sensitivity = 0.25;
+    const pitchLimit = 60;
+
+    function rotateCamera(deltaX, deltaY) {
+
+      yaw -= deltaX * sensitivity;
+      pitch -= deltaY * sensitivity;
+
+      pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
+
+      pivot.object3D.rotation.y = THREE.MathUtils.degToRad(yaw);
+      pivot.object3D.rotation.x = THREE.MathUtils.degToRad(pitch);
     }
 
-    tick();
-  });
+    /* Mouse */
+    window.addEventListener('mousedown', e => {
+      isDragging = true;
+      previousX = e.clientX;
+      previousY = e.clientY;
+    });
 
-});
-</script>
+    window.addEventListener('mouseup', () => isDragging = false);
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      rotateCamera(e.clientX - previousX, e.clientY - previousY);
+      previousX = e.clientX;
+      previousY = e.clientY;
+    });
 
-  const pivot = document.querySelector('#cameraPivot');
-  const camera = document.querySelector('#gameCamera');
+    /* Touch */
+    window.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1) return;
+      isDragging = true;
+      previousX = e.touches[0].clientX;
+      previousY = e.touches[0].clientY;
+    });
 
-  let isDragging = false;
-  let previousX = 0;
-  let previousY = 0;
+    window.addEventListener('touchend', () => isDragging = false);
 
-  let yaw = 0;
-  let pitch = 0;
+    window.addEventListener('touchmove', e => {
+      if (!isDragging || e.touches.length !== 1) return;
+      rotateCamera(
+        e.touches[0].clientX - previousX,
+        e.touches[0].clientY - previousY
+      );
+      previousX = e.touches[0].clientX;
+      previousY = e.touches[0].clientY;
+    });
 
-  const sensitivity = 0.3;
-  const pitchLimit = 60;
-
-  // Mouse
-  window.addEventListener('mousedown', e => {
-    isDragging = true;
-    previousX = e.clientX;
-    previousY = e.clientY;
-  });
-
-  window.addEventListener('mouseup', () => isDragging = false);
-
-  window.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-
-    const deltaX = e.clientX - previousX;
-    const deltaY = e.clientY - previousY;
-
-    yaw -= deltaX * sensitivity;
-    pitch -= deltaY * sensitivity;
-
-    pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
-
-    pivot.object3D.rotation.y = THREE.MathUtils.degToRad(yaw);
-    pivot.object3D.rotation.x = THREE.MathUtils.degToRad(pitch);
-
-    previousX = e.clientX;
-    previousY = e.clientY;
-  });
-
-  // Touch
-  window.addEventListener('touchstart', e => {
-    isDragging = true;
-    previousX = e.touches[0].clientX;
-    previousY = e.touches[0].clientY;
-  });
-
-  window.addEventListener('touchend', () => isDragging = false);
-
-  window.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-
-    const deltaX = e.touches[0].clientX - previousX;
-    const deltaY = e.touches[0].clientY - previousY;
-
-    yaw -= deltaX * sensitivity;
-    pitch -= deltaY * sensitivity;
-
-    pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
-
-    pivot.object3D.rotation.y = THREE.MathUtils.degToRad(yaw);
-    pivot.object3D.rotation.x = THREE.MathUtils.degToRad(pitch);
-
-    previousX = e.touches[0].clientX;
-    previousY = e.touches[0].clientY;
   });
 
 });
@@ -203,7 +194,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
-
-
-
-
