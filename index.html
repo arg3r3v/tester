@@ -66,75 +66,58 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-  const rig = document.querySelector('#rig');
-  const player = document.querySelector('#player');
-  const cameraPivot = document.querySelector('#cameraPivot');
+  const yaw = document.querySelector('#cameraYaw');
+  const pitch = document.querySelector('#cameraPitch');
 
-  let keys = {};
-  let moving = false;
+  let isDragging = false;
+  let previousX = 0;
+  let previousY = 0;
 
-  const speed = 0.06;
-  const rotationSpeed = 0.15;
+  let yawRotation = 0;
+  let pitchRotation = 0;
 
-  window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-  window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+  const sensitivity = 0.003;
+  const maxPitch = Math.PI / 3;
 
-  player.addEventListener('model-loaded', () => {
-    player.components['animation-mixer'].pause();
-    tick();
-  });
-
-  function angleDifference(a, b) {
-    let diff = b - a;
-    return Math.atan2(Math.sin(diff), Math.cos(diff));
+  function onPointerDown(e) {
+    isDragging = true;
+    previousX = e.clientX || e.touches[0].clientX;
+    previousY = e.clientY || e.touches[0].clientY;
   }
 
-  function tick() {
-
-    let dirX = 0;
-    let dirZ = 0;
-
-    if (keys['w']) dirZ -= 1;
-    if (keys['s']) dirZ += 1;
-    if (keys['a']) dirX -= 1;
-    if (keys['d']) dirX += 1;
-
-    if (dirX !== 0 || dirZ !== 0) {
-
-      const length = Math.hypot(dirX, dirZ);
-      dirX /= length;
-      dirZ /= length;
-
-      // Movimiento relativo a cámara
-      const camY = cameraPivot.object3D.rotation.y;
-      const moveAngle = Math.atan2(dirX, dirZ) + camY;
-
-      rig.object3D.position.x += Math.sin(moveAngle) * speed;
-      rig.object3D.position.z += Math.cos(moveAngle) * speed;
-
-      // Rotación suave correcta
-      const targetRotation = moveAngle + Math.PI;
-      const currentRotation = player.object3D.rotation.y;
-      const diff = angleDifference(currentRotation, targetRotation);
-
-      player.object3D.rotation.y += diff * rotationSpeed;
-
-      if (!moving) {
-        player.components['animation-mixer'].play();
-        moving = true;
-      }
-
-    } else {
-
-      if (moving) {
-        player.components['animation-mixer'].pause();
-        moving = false;
-      }
-
-    }
-
-    requestAnimationFrame(tick);
+  function onPointerUp() {
+    isDragging = false;
   }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+
+    const clientX = e.clientX || e.touches[0].clientX;
+    const clientY = e.clientY || e.touches[0].clientY;
+
+    const deltaX = clientX - previousX;
+    const deltaY = clientY - previousY;
+
+    previousX = clientX;
+    previousY = clientY;
+
+    yawRotation -= deltaX * sensitivity;
+    pitchRotation -= deltaY * sensitivity;
+
+    // Limitar vertical
+    pitchRotation = Math.max(-maxPitch, Math.min(maxPitch, pitchRotation));
+
+    yaw.object3D.rotation.y = yawRotation;
+    pitch.object3D.rotation.x = pitchRotation;
+  }
+
+  window.addEventListener('mousedown', onPointerDown);
+  window.addEventListener('mouseup', onPointerUp);
+  window.addEventListener('mousemove', onPointerMove);
+
+  window.addEventListener('touchstart', onPointerDown);
+  window.addEventListener('touchend', onPointerUp);
+  window.addEventListener('touchmove', onPointerMove);
 
 });
 </script>
@@ -142,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
 
 
