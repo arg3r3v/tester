@@ -30,8 +30,8 @@
 
   <!-- RIG -->
   <a-entity id="rig"
-            nipple-controls="mode: dynamic"
-            position="0 0 0">
+          nipple-controls="mode: dynamic; zone: document.body;"
+          position="0 0 0">
 
     <!-- TLACUACHE -->
 <a-entity id="player"
@@ -86,11 +86,11 @@ window.addEventListener('load', () => {
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
     /* NIPPLE */
-    window.addEventListener('nipplemove', (evt) => {
+rig.addEventListener('nipplemove', (evt) => {
   nippleVector.set(evt.detail.vector.x, evt.detail.vector.y);
 });
 
-window.addEventListener('nippleend', () => {
+rig.addEventListener('nippleend', () => {
   nippleVector.set(0, 0);
 });
 
@@ -163,6 +163,7 @@ window.addEventListener('nippleend', () => {
 
 </body>
 </html>
+
 
 
 
