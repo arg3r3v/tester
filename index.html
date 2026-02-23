@@ -5,85 +5,100 @@
   <title>Prueba Árbol</title>
 
   <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 
   <style>
-    html, body { margin:0; overflow:hidden; height:100%; }
-
-    #joyMove, #joyLook {
-      position:absolute;
-      width:140px;
-      height:140px;
-      bottom:20px;
-      touch-action:none;
-      display:none;
-      z-index:9999;
+    /* Zona joystick, invisible en desktop */
+    #joyzone {
+      position: absolute;
+      left: 8px;
+      bottom: 18px;
+      width: 140px;
+      height: 140px;
+      touch-action: none; /* evita gestos del navegador dentro de la zona */
+      display: none; /* se mostrará solo en dispositivos táctiles por JS */
+      z-index: 9999;
+      /* para depurar si quieres ver la zona: uncomment
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      */
     }
-
-    #joyMove { left:20px; }
-    #joyLook { right:20px; }
+    html,body { height:100%; margin:0; }
   </style>
 </head>
 
-<body>
+<body style="margin:0; overflow:hidden;">
 
-<div id="joyMove"></div>
-<div id="joyLook"></div>
+  <!-- Zona para joystick (solo se activa en touch) -->
+  <div id="joyzone" aria-hidden="true"></div>
 
-<a-scene background="color:#7F7F7F">
+  <a-scene
+    background="color: #7F7F7FFF"
+    renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+    shadow="type: pcfsoft">
 
-  <a-assets>
-    <a-asset-item id="tronco" src="assets/tronco.glb"></a-asset-item>
-    <a-asset-item id="ramas" src="assets/ramas.glb"></a-asset-item>
-    <a-asset-item id="hongos" src="assets/hongos.glb"></a-asset-item>
-    <a-asset-item id="tlacuache" src="assets/tlacuache.glb"></a-asset-item>
-  </a-assets>
+    <!-- Assets -->
+    <a-assets>
+      <a-asset-item id="tronco" src="assets/tronco.glb"></a-asset-item>
+      <a-asset-item id="ramas" src="assets/ramas.glb"></a-asset-item>
+      <a-asset-item id="hongos" src="assets/hongos.glb"></a-asset-item>
+      <a-asset-item id="tlacuache" src="assets/tlacuache.glb"></a-asset-item>
+    </a-assets>
 
-  <a-entity gltf-model="#tronco" position="0 0 -3"></a-entity>
-  <a-entity gltf-model="#ramas" position="0 0 -3"></a-entity>
-  <a-entity gltf-model="#hongos" position="0 0 -3"></a-entity>
+    <!-- Modelos -->
+    <a-entity gltf-model="#tronco" position="0 0 -3"></a-entity>
+    <a-entity gltf-model="#ramas" position="0 0 -3"></a-entity>
+    <a-entity gltf-model="#hongos" position="0 0 -3"></a-entity>
 
-  <a-entity id="rig">
+    <!-- RIG -->
+    <a-entity id="rig" position="0 0 0">
 
-    <a-entity id="player"
-              gltf-model="#tlacuache"
-              animation-mixer="clip: walk; loop: repeat">
-    </a-entity>
+      <!-- TLACUACHE -->
+      <a-entity id="player"
+                gltf-model="#tlacuache"
+                animation-mixer="clip: walk; loop: repeat">
+      </a-entity>
 
-    <a-entity id="cameraPivot" position="0 1.5 0">
-      <a-entity id="cameraYaw" look-controls="pointerLockEnabled:false">
-        <a-entity position="0 1 4">
-          <a-entity id="gameCamera" camera></a-entity>
+      <!-- CÁMARA: pivot -> yaw (look-controls) -> boom -> camera -->
+      <a-entity id="cameraPivot" position="0 1.5 0">
+        <a-entity id="cameraYaw" look-controls="pointerLockEnabled: false">
+          <a-entity id="cameraBoom" position="0 1 4">
+            <a-entity id="gameCamera" camera></a-entity>
+          </a-entity>
         </a-entity>
       </a-entity>
+
     </a-entity>
 
-  </a-entity>
-
-</a-scene>
+  </a-scene>
 
 <script>
+/* Script: teclado + nipplejs (solo en touch) + movimiento relativo a cámara
+   - joystick aparece SOLO en dispositivos táctiles
+   - joystick zona aislada (#joyzone) para no interferir con look-controls
+   - W/A/S/D funcionan como adelante/izquierda/atrás/derecha
+*/
+
 window.addEventListener('load', () => {
-
   const scene = document.querySelector('a-scene');
-
   scene.addEventListener('loaded', () => {
 
     const rig = document.querySelector('#rig');
     const player = document.querySelector('#player');
     const camera = document.querySelector('#gameCamera');
-    const cameraYaw = document.querySelector('#cameraYaw');
-    const cameraPivot = document.querySelector('#cameraPivot');
+    const joyzone = document.getElementById('joyzone');
 
-    const joyMoveEl = document.getElementById('joyMove');
-    const joyLookEl = document.getElementById('joyLook');
+    if (!rig || !player || !camera) {
+      console.warn('Faltan elementos rig/player/camera');
+      return;
+    }
 
     const speed = 4;
     const rotationSmooth = 0.15;
-    const lookSensitivity = 2.5;
 
     let keys = {};
-    let moveVector2D = new THREE.Vector2(0,0);
+    let nippleVector = new THREE.Vector2(0, 0);
     let lastTime = performance.now();
     let moving = false;
 
@@ -92,119 +107,99 @@ window.addEventListener('load', () => {
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    /* ================= KEYBOARD ================= */
-
+    /* ---------- KEYBOARD ---------- */
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    /* ================= TOUCH DETECTION ================= */
+    /* ---------- NIPPLE (solo en touch) ---------- */
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
 
-    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-
+    let joystick = null;
     if (isTouch) {
+      // mostrar la zona del joystick
+      joyzone.style.display = 'block';
 
-      joyMoveEl.style.display = 'block';
-      joyLookEl.style.display = 'block';
-
-      joyMoveEl.addEventListener('touchmove', e => e.preventDefault(), { passive:false });
-      joyLookEl.addEventListener('touchmove', e => e.preventDefault(), { passive:false });
-
-      /* ===== LEFT JOYSTICK (MOVE) ===== */
-
-      const moveJoy = nipplejs.create({
-        zone: joyMoveEl,
-        mode: 'static',
-        position: { left:'50%', top:'50%' },
-        size:120,
-        color:'white'
+      // create nipplejs joystick inside the small joyzone so it doesn't steal all touches
+      joystick = nipplejs.create({
+        zone: joyzone,
+        mode: 'dynamic',      // aparece donde tocas en la zona
+        position: { left: '50%', top: '50%' }, // relative to zone
+        color: 'white',
+        size: 120,
       });
 
-      moveJoy.on('move', (evt,data)=>{
-        if(!data || !data.vector) return;
-        moveVector2D.set(data.vector.x, data.vector.y);
+      joystick.on('move', (evt, data) => {
+        if (!data || !data.vector) return;
+        nippleVector.set(data.vector.x, data.vector.y);
       });
 
-      moveJoy.on('end', ()=>{
-        moveVector2D.set(0,0);
+      joystick.on('end', () => {
+        nippleVector.set(0, 0);
       });
 
-      /* ===== RIGHT JOYSTICK (LOOK) ===== */
-
-      const lookJoy = nipplejs.create({
-        zone: joyLookEl,
-        mode: 'static',
-        position: { left:'50%', top:'50%' },
-        size:120,
-        color:'white'
-      });
-
-      lookJoy.on('move', (evt,data)=>{
-        if(!data || !data.vector) return;
-
-        cameraYaw.object3D.rotation.y -= data.vector.x * lookSensitivity * 0.05;
-        cameraPivot.object3D.rotation.x -= data.vector.y * lookSensitivity * 0.05;
-
-        cameraPivot.object3D.rotation.x =
-          Math.max(-1.2, Math.min(1.2, cameraPivot.object3D.rotation.x));
-      });
+      // optional: prevent default touchmove inside zone to avoid page scroll while dragging joystick
+      joyzone.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     }
 
-    player.addEventListener('model-loaded', ()=>{
+    /* ---------- INIT ANIMATION ---------- */
+    player.addEventListener('model-loaded', () => {
       player.components['animation-mixer']?.pause();
     });
 
-    /* ================= GAME LOOP ================= */
-
-    function tick(){
-
+    /* ---------- MAIN LOOP ---------- */
+    function tick() {
       const now = performance.now();
-      const delta = (now-lastTime)/1000;
+      const delta = (now - lastTime) / 1000;
       lastTime = now;
 
-      const input = new THREE.Vector2(0,0);
+      const input = new THREE.Vector2(0, 0);
 
-      if(keys['w']) input.y -= 1;
-      if(keys['s']) input.y += 1;
-      if(keys['a']) input.x -= 1;
-      if(keys['d']) input.x += 1;
+      // keyboard
+      if (keys['w']) input.y -= 1;
+      if (keys['s']) input.y += 1;
+      if (keys['a']) input.x -= 1;
+      if (keys['d']) input.x += 1;
 
-      input.x += moveVector2D.x;
-      input.y -= moveVector2D.y;
+      // nipple (touch)
+      input.x += nippleVector.x;
+      input.y -= nippleVector.y;
 
-      if(input.length() > 0){
+      if (input.length() > 0) {
 
         input.normalize();
 
+        // camera forward/right in world-space
         const forward = new THREE.Vector3();
         camera.object3D.getWorldDirection(forward);
         forward.y = 0;
         forward.normalize();
 
         const right = new THREE.Vector3();
-        right.crossVectors(forward,new THREE.Vector3(0,1,0)).normalize();
+        right.crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
 
+        // move: signs chosen so W = forward, A = left, D = right
         const moveVector = new THREE.Vector3();
-        moveVector.addScaledVector(forward,-input.y);
-        moveVector.addScaledVector(right,input.x);
+        moveVector.addScaledVector(forward, -input.y);
+        moveVector.addScaledVector(right, input.x);
 
-        rig.object3D.position.addScaledVector(moveVector,speed*delta);
+        rig.object3D.position.addScaledVector(moveVector, speed * delta);
 
-        const moveAngle = Math.atan2(moveVector.x,moveVector.z);
-        const targetRotation = moveAngle + Math.PI;
+        // rotate player toward movement direction
+        const moveAngle = Math.atan2(moveVector.x, moveVector.z);
+        const targetRotation = moveAngle + Math.PI; // adjust if your model faces +Z or -Z
 
         const currentRotation = player.object3D.rotation.y;
-        const diff = angleDifference(currentRotation,targetRotation);
+        const diff = angleDifference(currentRotation, targetRotation);
 
-        player.object3D.rotation.y += diff*rotationSmooth;
+        player.object3D.rotation.y += diff * rotationSmooth;
 
-        if(!moving){
+        if (!moving) {
           player.components['animation-mixer']?.play();
           moving = true;
         }
 
       } else {
-
-        if(moving){
+        if (moving) {
           player.components['animation-mixer']?.pause();
           moving = false;
         }
@@ -215,8 +210,8 @@ window.addEventListener('load', () => {
 
     tick();
 
-  });
-});
+  }); // scene.loaded
+}); // window.load
 </script>
 
 </body>
