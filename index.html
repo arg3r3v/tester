@@ -40,7 +40,7 @@
 
     <!-- Cámara y tlacuache -->
 <a-entity id="rig"
-  movement-controls="controls: keyboard, nipple; speed: 0.06; acceleration: 20;"
+  nipple-controls="mode: static"
   position="0 0 0">
 
   <!-- TLACUACHE -->
@@ -68,99 +68,122 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const rig = document.querySelector('#rig');
   const player = document.querySelector('#player');
-  const cameraYaw = document.querySelector('#cameraYaw');
+  const camera = document.querySelector('#gameCamera');
 
-  let lastPosition = new THREE.Vector3();
+  const speed = 4;
+  const rotationSmooth = 0.15;
+
+  let keys = {};
+  let nippleVector = new THREE.Vector2(0, 0);
+  let lastTime = performance.now();
   let moving = false;
-
-  const rigSmooth = 0.12;      // suavizado rotación rig (0.08 - 0.2)
-  const playerSmooth = 0.15;   // suavizado rotación player
-  const moveThreshold = 0.0001;
 
   function angleDifference(a, b) {
     let diff = b - a;
     return Math.atan2(Math.sin(diff), Math.cos(diff));
   }
 
-  player.addEventListener('model-loaded', () => {
+  /* ==============================
+     KEYBOARD INPUT
+  ============================== */
 
-    if (player.components['animation-mixer']) {
-      player.components['animation-mixer'].pause();
-    }
+  window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+  window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    rig.object3D.getWorldPosition(lastPosition);
+  /* ==============================
+     NIPPLE INPUT
+  ============================== */
 
-    function tick() {
-
-      /* =========================================
-         1️⃣ SINCRONIZAR RIG CON CÁMARA (SUAVE)
-      ========================================= */
-
-      const currentRigRotation = rig.object3D.rotation.y;
-      const targetRigRotation = cameraYaw.object3D.rotation.y;
-
-      const rigDiff = angleDifference(currentRigRotation, targetRigRotation);
-
-      rig.object3D.rotation.y += rigDiff * rigSmooth;
-
-
-      /* =========================================
-         2️⃣ DETECTAR MOVIMIENTO REAL
-      ========================================= */
-
-      const currentPosition = new THREE.Vector3();
-      rig.object3D.getWorldPosition(currentPosition);
-
-      const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
-      const distance = direction.length();
-
-
-      /* =========================================
-         3️⃣ ROTAR PERSONAJE SEGÚN DIRECCIÓN
-      ========================================= */
-
-      if (distance > moveThreshold) {
-
-        const moveAngle = Math.atan2(direction.x, direction.z);
-
-        // ⚠ Si tu modelo mira hacia atrás deja +Math.PI
-        const targetRotation = moveAngle + Math.PI;
-
-        const currentRotation = player.object3D.rotation.y;
-        const diff = angleDifference(currentRotation, targetRotation);
-
-        player.object3D.rotation.y += diff * playerSmooth;
-
-        if (!moving) {
-          if (player.components['animation-mixer']) {
-            player.components['animation-mixer'].play();
-          }
-          moving = true;
-        }
-
-      } else {
-
-        if (moving) {
-          if (player.components['animation-mixer']) {
-            player.components['animation-mixer'].pause();
-          }
-          moving = false;
-        }
-      }
-
-      lastPosition.copy(currentPosition);
-      requestAnimationFrame(tick);
-    }
-
-    tick();
+  rig.addEventListener('nipplemove', (evt) => {
+    const data = evt.detail;
+    nippleVector.set(data.vector.x, data.vector.y);
   });
 
+  rig.addEventListener('nippleend', () => {
+    nippleVector.set(0, 0);
+  });
+
+  /* ==============================
+     ANIMATION INIT
+  ============================== */
+
+  player.addEventListener('model-loaded', () => {
+    player.components['animation-mixer']?.pause();
+  });
+
+  /* ==============================
+     MAIN LOOP
+  ============================== */
+
+  function tick() {
+
+    const now = performance.now();
+    const delta = (now - lastTime) / 1000;
+    lastTime = now;
+
+    const input = new THREE.Vector2(0, 0);
+
+    // keyboard
+    if (keys['w']) input.y -= 1;
+    if (keys['s']) input.y += 1;
+    if (keys['a']) input.x -= 1;
+    if (keys['d']) input.x += 1;
+
+    // nipple
+    input.x += nippleVector.x;
+    input.y -= nippleVector.y;
+
+    if (input.length() > 0) {
+
+      input.normalize();
+
+      // 🔥 obtener forward de cámara
+      const forward = new THREE.Vector3();
+      camera.object3D.getWorldDirection(forward);
+      forward.y = 0;
+      forward.normalize();
+
+      const right = new THREE.Vector3();
+      right.crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
+
+      const moveVector = new THREE.Vector3();
+      moveVector.addScaledVector(forward, -input.y);
+      moveVector.addScaledVector(right, input.x);
+
+      rig.object3D.position.addScaledVector(moveVector, speed * delta);
+
+      // rotar personaje hacia movimiento
+      const moveAngle = Math.atan2(moveVector.x, moveVector.z);
+      const targetRotation = moveAngle + Math.PI;
+
+      const currentRotation = player.object3D.rotation.y;
+      const diff = angleDifference(currentRotation, targetRotation);
+
+      player.object3D.rotation.y += diff * rotationSmooth;
+
+      if (!moving) {
+        player.components['animation-mixer']?.play();
+        moving = true;
+      }
+
+    } else {
+      if (moving) {
+        player.components['animation-mixer']?.pause();
+        moving = false;
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  tick();
 });
 </script>
   
 </body>
 
 </html>
+
 
 
 
