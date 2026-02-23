@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
       rig.object3D.position.z += Math.cos(moveAngle) * speed;
 
       // Rotación suave correcta
-      const targetRotation = moveAngle;
+      const targetRotation = moveAngle + Math.PI;
       const currentRotation = player.object3D.rotation.y;
       const diff = angleDifference(currentRotation, targetRotation);
 
@@ -140,4 +140,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
