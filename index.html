@@ -128,7 +128,7 @@ window.addEventListener('nippleend', () => {
 
         const moveVector = new THREE.Vector3();
         moveVector.addScaledVector(forward, input.y);
-        moveVector.addScaledVector(right, input.x);
+        moveVector.addScaledVector(right, -input.x);
 
         rig.object3D.position.addScaledVector(moveVector, speed * delta);
 
@@ -163,6 +163,7 @@ window.addEventListener('nippleend', () => {
 
 </body>
 </html>
+
 
 
 
