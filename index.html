@@ -36,7 +36,6 @@
     <!-- TLACUACHE -->
 <a-entity id="player"
           gltf-model="#tlacuache"
-          rotation="0 180 0"
           animation-mixer="clip: walk; loop: repeat">
 </a-entity>
 
@@ -134,7 +133,7 @@ window.addEventListener('load', () => {
         rig.object3D.position.addScaledVector(moveVector, speed * delta);
 
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
-        const targetRotation = moveAngle;
+        const targetRotation = moveAngle + Math.PI;
 
         const currentRotation = player.object3D.rotation.y;
         const diff = angleDifference(currentRotation, targetRotation);
@@ -164,4 +163,5 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
