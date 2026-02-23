@@ -86,13 +86,13 @@ window.addEventListener('load', () => {
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
     /* NIPPLE */
-    rig.addEventListener('nipplemove', (evt) => {
-      nippleVector.set(evt.detail.vector.x, evt.detail.vector.y);
-    });
+    window.addEventListener('nipplemove', (evt) => {
+  nippleVector.set(evt.detail.vector.x, evt.detail.vector.y);
+});
 
-    rig.addEventListener('nippleend', () => {
-      nippleVector.set(0, 0);
-    });
+window.addEventListener('nippleend', () => {
+  nippleVector.set(0, 0);
+});
 
     player.addEventListener('model-loaded', () => {
       player.components['animation-mixer']?.pause();
@@ -127,7 +127,7 @@ window.addEventListener('load', () => {
         right.crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
 
         const moveVector = new THREE.Vector3();
-        moveVector.addScaledVector(forward, -input.y);
+        moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, input.x);
 
         rig.object3D.position.addScaledVector(moveVector, speed * delta);
@@ -163,5 +163,6 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
