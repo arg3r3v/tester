@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const rig = document.querySelector('#rig');
   const player = document.querySelector('#player');
+  const cameraYaw = document.querySelector('#cameraYaw');
 
   let lastPosition = new THREE.Vector3();
   let moving = false;
@@ -80,10 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
   player.addEventListener('model-loaded', () => {
 
     player.components['animation-mixer'].pause();
-
     rig.object3D.getWorldPosition(lastPosition);
 
     function tick() {
+
+      /* ---- SINCRONIZAR DIRECCIÓN CON CÁMARA ---- */
+      rig.object3D.rotation.y = cameraYaw.object3D.rotation.y;
 
       const currentPosition = new THREE.Vector3();
       rig.object3D.getWorldPosition(currentPosition);
@@ -93,16 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (distance > 0.0001) {
 
-        // Dirección real del movimiento
         const moveAngle = Math.atan2(direction.x, direction.z);
-
-        // Ajuste si tu modelo mira al revés
         const targetRotation = moveAngle + Math.PI;
 
         const currentRotation = player.object3D.rotation.y;
         const diff = angleDifference(currentRotation, targetRotation);
 
-        // Rotación suave
         player.object3D.rotation.y += diff * 0.15;
 
         if (!moving) {
@@ -110,13 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
           moving = true;
         }
 
-      } else {
+      } else if (moving) {
 
-        if (moving) {
-          player.components['animation-mixer'].pause();
-          moving = false;
-        }
-
+        player.components['animation-mixer'].pause();
+        moving = false;
       }
 
       lastPosition.copy(currentPosition);
@@ -132,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
 
 
