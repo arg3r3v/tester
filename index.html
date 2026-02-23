@@ -6,6 +6,7 @@
 
   <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 </head>
 
 <body style="margin:0; overflow:hidden;">
@@ -29,9 +30,7 @@
   <a-entity gltf-model="#hongos" position="0 0 -3"></a-entity>
 
   <!-- RIG -->
-  <a-entity id="rig"
-          nipple-controls="mode: dynamic; zone: document.body;"
-          position="0 0 0">
+  <a-entity id="rig" position="0 0 0">
 
     <!-- TLACUACHE -->
 <a-entity id="player"
@@ -85,18 +84,22 @@ window.addEventListener('load', () => {
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    /* NIPPLE */
-rig.addEventListener('nipplemove', (evt) => {
-  nippleVector.set(evt.detail.vector.x, evt.detail.vector.y);
+/* NIPPLE REAL */
+const joystick = nipplejs.create({
+  zone: document.body,
+  mode: 'dynamic',
+  position: { left: '15%', bottom: '20%' },
+  color: 'white',
+  size: 120
 });
 
-rig.addEventListener('nippleend', () => {
+joystick.on('move', (evt, data) => {
+  nippleVector.set(data.vector.x, data.vector.y);
+});
+
+joystick.on('end', () => {
   nippleVector.set(0, 0);
 });
-
-    player.addEventListener('model-loaded', () => {
-      player.components['animation-mixer']?.pause();
-    });
 
     function tick() {
 
@@ -163,6 +166,7 @@ rig.addEventListener('nippleend', () => {
 
 </body>
 </html>
+
 
 
 
