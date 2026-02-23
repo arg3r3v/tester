@@ -62,136 +62,73 @@
   </a-scene>
 
 <script>
-/* Cámara orbital robusta para A-Frame + movement-controls (joystick automático)
-   - Ignora drags en la zona izquierda (joystick areaThreshold)
-   - Suaviza rotación (smoothing)
-   - Mantiene la cámara mirando al jugador cada frame
-   - Coloca esto después del <a-scene> en el body
-*/
-window.addEventListener('load', () => {
-  const scene = document.querySelector('a-scene');
-  scene.addEventListener('loaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
-    const rig = document.querySelector('#rig');               // tu rig (movement-controls)
-    const player = document.querySelector('#player');         // tlacuache
-    const pivot = document.querySelector('#cameraPivot');     // pivot (centro de órbita)
-    const boom = document.querySelector('#cameraBoom');       // boom (distancia)
-    const cameraEnt = pivot.querySelector('[camera]');        // la entidad cámara
+  const rig = document.querySelector('#rig');
+  const player = document.querySelector('#player');
 
-    if (!rig || !player || !pivot || !boom || !cameraEnt) {
-      console.warn('Faltan elementos de cámara/rig/player. Revisa IDs.');
-      return;
-    }
+  let lastPosition = new THREE.Vector3();
+  let moving = false;
 
-    // Parámetros que puedes ajustar
-    const screenIgnoreRatio = 0.40; // % izquierda reservada para joystick (0..1)
-    const sensitivity = 0.25;       // sensibilidad del drag
-    const pitchLimit = 60;          // límite vertical en grados
-    const smoothing = 0.12;         // 0..1 (0 instantáneo, 1 muy lento)
+  function angleDifference(a, b) {
+    let diff = b - a;
+    return Math.atan2(Math.sin(diff), Math.cos(diff));
+  }
 
-    // Estado de rotación (grados)
-    let targetYaw = 0, targetPitch = 10;   // valores objetivo (grados)
-    let smoothYaw = 0, smoothPitch = 10;   // valores mostrados (grados)
+  player.addEventListener('model-loaded', () => {
 
-    let dragging = false;
-    let lastX = 0, lastY = 0;
-    let activePointerId = null;
+    player.components['animation-mixer'].pause();
 
-    // Asegurarse que el player esté cargado antes de empezar (y pausar anim si conviene)
-    player.addEventListener('model-loaded', () => {
-      // opcional: pausar animación al inicio
-      if (player.components && player.components['animation-mixer']) {
-        player.components['animation-mixer'].pause();
+    rig.object3D.getWorldPosition(lastPosition);
+
+    function tick() {
+
+      const currentPosition = new THREE.Vector3();
+      rig.object3D.getWorldPosition(currentPosition);
+
+      const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
+      const distance = direction.length();
+
+      if (distance > 0.0001) {
+
+        // Dirección real del movimiento
+        const moveAngle = Math.atan2(direction.x, direction.z);
+
+        // Ajuste si tu modelo mira al revés
+        const targetRotation = moveAngle + Math.PI;
+
+        const currentRotation = player.object3D.rotation.y;
+        const diff = angleDifference(currentRotation, targetRotation);
+
+        // Rotación suave
+        player.object3D.rotation.y += diff * 0.15;
+
+        if (!moving) {
+          player.components['animation-mixer'].play();
+          moving = true;
+        }
+
+      } else {
+
+        if (moving) {
+          player.components['animation-mixer'].pause();
+          moving = false;
+        }
+
       }
-    });
 
-    // UTIL: clamp
-    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-
-    // Un único handler que decide si un input debe rotar la cámara.
-    // En móvil no queremos que drags en la mitad izquierda (joystick) roten la cámara.
-    function pointerStart(clientX, clientY, pointerId, pointerType) {
-      // Si el touch/mouse comienza en la zona izquierda reservada, ignorar
-      const ignoreWidth = window.innerWidth * screenIgnoreRatio;
-      if (clientX <= ignoreWidth && pointerType === 'touch') return false;
-      // start dragging
-      dragging = true;
-      lastX = clientX;
-      lastY = clientY;
-      activePointerId = pointerId;
-      return true;
+      lastPosition.copy(currentPosition);
+      requestAnimationFrame(tick);
     }
 
-    function pointerMove(clientX, clientY) {
-      if (!dragging) return;
-      const dx = clientX - lastX;
-      const dy = clientY - lastY;
-      lastX = clientX;
-      lastY = clientY;
-      targetYaw -= dx * sensitivity * 0.1;    // grados
-      targetPitch -= dy * sensitivity * 0.1;  // grados
-      targetPitch = clamp(targetPitch, -pitchLimit, pitchLimit);
-    }
+    tick();
+  });
 
-    function pointerEnd(pointerId) {
-      if (activePointerId === pointerId) {
-        dragging = false;
-        activePointerId = null;
-      }
-    }
-
-    // Pointer events (soporta mouse y touch con pointerId)
-    window.addEventListener('pointerdown', (ev) => {
-      // Only primary button / primary touch
-      if (ev.isPrimary && (ev.pointerType === 'mouse' || ev.pointerType === 'touch')) {
-        pointerStart(ev.clientX, ev.clientY, ev.pointerId, ev.pointerType);
-      }
-    }, {passive: true});
-
-    window.addEventListener('pointermove', (ev) => {
-      if (!ev.isPrimary) return;
-      pointerMove(ev.clientX, ev.clientY);
-    }, {passive: true});
-
-    window.addEventListener('pointerup', (ev) => { pointerEnd(ev.pointerId); }, {passive: true});
-    window.addEventListener('pointercancel', (ev) => { pointerEnd(ev.pointerId); }, {passive: true});
-    window.addEventListener('pointerout', (ev) => { pointerEnd(ev.pointerId); }, {passive: true});
-    window.addEventListener('pointerleave', (ev) => { pointerEnd(ev.pointerId); }, {passive: true});
-
-    // RENDER / ANIM LOOP: suavizado + lookAt
-    // Convertimos grados a radianes para rotaciones en object3D
-    function updateLoop() {
-      // lerp smoothYaw / Pitch hacia target
-      smoothYaw += (targetYaw - smoothYaw) * smoothing;
-      smoothPitch += (targetPitch - smoothPitch) * smoothing;
-
-      // aplicar rotaciones al pivot (convertir a radianes)
-      pivot.object3D.rotation.y = THREE.MathUtils.degToRad(smoothYaw);
-      pivot.object3D.rotation.x = THREE.MathUtils.degToRad(smoothPitch);
-
-      // forzar que la cámara (world) mire al player para evitar desalineos
-      // calculamos la posición world del player y hacemos lookAt
-      const playerWorldPos = new THREE.Vector3();
-      player.object3D.getWorldPosition(playerWorldPos);
-
-      // Obtener la entidad cámara real (object3D) y que mire al player
-      cameraEnt.object3D.lookAt(playerWorldPos);
-
-      requestAnimationFrame(updateLoop);
-    }
-
-    // Inicializar con la rotación actual del pivot (si tiene)
-    const initRot = pivot.getAttribute('rotation') || { x:0, y:0, z:0 };
-    smoothYaw = targetYaw = initRot.y;
-    smoothPitch = targetPitch = initRot.x;
-
-    updateLoop();
-
-  }); // scene.loaded
-}); // window.load
+});
 </script>
   
 </body>
 
 </html>
+
 
