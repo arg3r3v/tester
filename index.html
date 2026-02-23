@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Rotar hacia dirección de movimiento
         const angle = Math.atan2(direction.x, direction.z);
-        player.object3D.rotation.y = angle;
+        player.object3D.rotation.y = angle + Math.PI;
 
       } else {
 
@@ -114,5 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
 
 
