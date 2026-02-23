@@ -51,11 +51,11 @@
   </a-entity>
 
   <!-- CÁMARA -->
-<a-entity id="cameraPivot" position="0 1.5 0">
-    <a-entity id="cameraBoom" position="0 1 4">
-      <a-entity camera look-controls></a-entity>
-    </a-entity>
+<a-entity id="cameraPivot" position="0 1.5 0" rotation="0 0 0">
+  <a-entity id="cameraBoom" position="0 1 4">
+    <a-entity id="gameCamera" camera></a-entity>
   </a-entity>
+</a-entity>
 
 </a-entity>
 
@@ -127,9 +127,83 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const pivot = document.querySelector('#cameraPivot');
+  const camera = document.querySelector('#gameCamera');
+
+  let isDragging = false;
+  let previousX = 0;
+  let previousY = 0;
+
+  let yaw = 0;
+  let pitch = 0;
+
+  const sensitivity = 0.3;
+  const pitchLimit = 60;
+
+  // Mouse
+  window.addEventListener('mousedown', e => {
+    isDragging = true;
+    previousX = e.clientX;
+    previousY = e.clientY;
+  });
+
+  window.addEventListener('mouseup', () => isDragging = false);
+
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+
+    const deltaX = e.clientX - previousX;
+    const deltaY = e.clientY - previousY;
+
+    yaw -= deltaX * sensitivity;
+    pitch -= deltaY * sensitivity;
+
+    pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
+
+    pivot.object3D.rotation.y = THREE.MathUtils.degToRad(yaw);
+    pivot.object3D.rotation.x = THREE.MathUtils.degToRad(pitch);
+
+    previousX = e.clientX;
+    previousY = e.clientY;
+  });
+
+  // Touch
+  window.addEventListener('touchstart', e => {
+    isDragging = true;
+    previousX = e.touches[0].clientX;
+    previousY = e.touches[0].clientY;
+  });
+
+  window.addEventListener('touchend', () => isDragging = false);
+
+  window.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+
+    const deltaX = e.touches[0].clientX - previousX;
+    const deltaY = e.touches[0].clientY - previousY;
+
+    yaw -= deltaX * sensitivity;
+    pitch -= deltaY * sensitivity;
+
+    pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
+
+    pivot.object3D.rotation.y = THREE.MathUtils.degToRad(yaw);
+    pivot.object3D.rotation.x = THREE.MathUtils.degToRad(pitch);
+
+    previousX = e.touches[0].clientX;
+    previousY = e.touches[0].clientY;
+  });
+
+});
+</script>
+  
 </body>
 
 </html>
+
 
 
 
