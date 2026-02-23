@@ -51,7 +51,7 @@
   </a-entity>
 
   <!-- CÁMARA -->
-  <a-entity id="cameraPivot" position="0 1.5 0">
+<a-entity id="cameraPivot" position="0 1.5 0">
     <a-entity id="cameraBoom" position="0 1 4">
       <a-entity camera look-controls></a-entity>
     </a-entity>
@@ -112,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Rotación suave correcta
       const targetRotation = moveAngle;
-      const targetRotation = moveAngle + Math.PI;
       const currentRotation = player.object3D.rotation.y;
       const diff = angleDifference(currentRotation, targetRotation);
 
@@ -141,3 +140,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 
 </html>
+
