@@ -45,12 +45,12 @@
   position="0 0 0">
 
     <!-- TLACUACHE -->
-  <a-entity id="player"
-            gltf-model="#tlacuache"
-            position="0 0 0"
-            scale="1 1 1"
-            animation-mixer="clip: walk; loop: repeat">
-  </a-entity>
+<a-entity id="player"
+          gltf-model="#tlacuache"
+          position="0 0 0"
+          scale="1 1 1"
+          animation-mixer="clip: walk; loop: repeat; timeScale: 1">
+</a-entity>
   
   <a-entity camera position="0 1.5 0" look-controls></a-entity>
 </a-entity>
@@ -58,40 +58,61 @@
   </a-scene>
 
 <script>
-const rig = document.querySelector('#rig');
-const player = document.querySelector('#player');
+document.addEventListener('DOMContentLoaded', () => {
 
-let lastPosition = new THREE.Vector3();
-let moving = false;
+  const rig = document.querySelector('#rig');
+  const player = document.querySelector('#player');
 
-rig.object3D.getWorldPosition(lastPosition);
+  let lastPosition = new THREE.Vector3();
+  let moving = false;
 
-function checkMovement() {
-  const currentPosition = new THREE.Vector3();
-  rig.object3D.getWorldPosition(currentPosition);
+  player.addEventListener('model-loaded', () => {
 
-  const distance = currentPosition.distanceTo(lastPosition);
+    // Pausar animación al iniciar
+    player.components['animation-mixer'].pause();
 
-  if (distance > 0.001) {
-    if (!moving) {
-      player.components['animation-mixer'].play();
-      moving = true;
+    rig.object3D.getWorldPosition(lastPosition);
+
+    function checkMovement() {
+
+      const currentPosition = new THREE.Vector3();
+      rig.object3D.getWorldPosition(currentPosition);
+
+      const direction = new THREE.Vector3().subVectors(currentPosition, lastPosition);
+      const distance = direction.length();
+
+      if (distance > 0.001) {
+
+        if (!moving) {
+          player.components['animation-mixer'].play();
+          moving = true;
+        }
+
+        // Rotar hacia dirección de movimiento
+        const angle = Math.atan2(direction.x, direction.z);
+        player.object3D.rotation.y = angle;
+
+      } else {
+
+        if (moving) {
+          player.components['animation-mixer'].pause();
+          moving = false;
+        }
+
+      }
+
+      lastPosition.copy(currentPosition);
+      requestAnimationFrame(checkMovement);
     }
-  } else {
-    if (moving) {
-      player.components['animation-mixer'].pause();
-      moving = false;
-    }
-  }
 
-  lastPosition.copy(currentPosition);
-  requestAnimationFrame(checkMovement);
-}
+    checkMovement();
+  });
 
-checkMovement();
+});
 </script>
   
 </body>
 
 </html>
+
 
