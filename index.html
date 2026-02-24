@@ -219,7 +219,7 @@ window.addEventListener('load', () => {
         const rotSpeed = 1.5;
 
         look.yawObject.rotation.y -= -lookInput.x * rotSpeed * delta;
-        look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
+        look.pitchObject.rotation.x -= -lookInput.y * rotSpeed * delta;
 
         const maxPitch = Math.PI / 2 - 0.1;
         look.pitchObject.rotation.x = Math.max(
@@ -239,4 +239,5 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
