@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -149,20 +149,13 @@ lookJoy.on('move', (evt, data) => {
   const look = cameraYaw.components['look-controls'];
   if (!look) return;
 
-  const rotSpeed = 2.5;
+  const sensitivity = 4; // Ajusta si quieres más o menos sensibilidad
 
-  // Horizontal (yaw)
-  look.yawObject.rotation.y -= data.vector.x * 0.05 * rotSpeed;
-
-  // Vertical (pitch)
-  look.pitchObject.rotation.x -= data.vector.y * 0.05 * rotSpeed;
-
-  // Limitar rotación vertical como hace la compu
-  const maxPitch = Math.PI / 2 - 0.1;
-  look.pitchObject.rotation.x = Math.max(
-    -maxPitch,
-    Math.min(maxPitch, look.pitchObject.rotation.x)
-  );
+  // Simular movimiento de mouse
+  look.onMouseMove({
+    movementX: data.vector.x * 10 * sensitivity,
+    movementY: -data.vector.y * 10 * sensitivity
+  });
 });
 
     }
@@ -237,6 +230,7 @@ lookJoy.on('move', (evt, data) => {
 
 </body>
 </html>
+
 
 
 
