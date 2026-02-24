@@ -93,6 +93,7 @@ window.addEventListener('load', () => {
 
     let keys = {};
     let nippleVector = new THREE.Vector2(0, 0);
+    let lookInput = new THREE.Vector2(0, 0); // 👈 SOLO agregado para rotación
     let lastTime = performance.now();
     let moving = false;
 
@@ -143,21 +144,14 @@ window.addEventListener('load', () => {
         size: 120
       });
 
-lookJoy.on('move', (evt, data) => {
-  if (!data || !data.vector) return;
+      lookJoy.on('move', (evt, data) => {
+        if (!data || !data.vector) return;
+        lookInput.set(data.vector.x, data.vector.y);
+      });
 
-  const look = cameraYaw.components['look-controls'];
-  if (!look) return;
-
-  const sensitivity = 4; // Ajusta si quieres más o menos sensibilidad
-
-  // Simular movimiento de mouse
-  look.onMouseMove({
-    movementX: data.vector.x * 10 * sensitivity,
-    movementY: -data.vector.y * 10 * sensitivity
-  });
-});
-
+      lookJoy.on('end', () => {
+        lookInput.set(0, 0);
+      });
     }
 
     /* ---------- INIT ANIMATION ---------- */
@@ -219,6 +213,21 @@ lookJoy.on('move', (evt, data) => {
         }
       }
 
+      /* -------- ROTACIÓN NIPPLE CORRECTA -------- */
+      const look = cameraYaw.components['look-controls'];
+      if (look) {
+        const rotSpeed = 2.5;
+
+        look.yawObject.rotation.y -= lookInput.x * rotSpeed * delta;
+        look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
+
+        const maxPitch = Math.PI / 2 - 0.1;
+        look.pitchObject.rotation.x = Math.max(
+          -maxPitch,
+          Math.min(maxPitch, look.pitchObject.rotation.x)
+        );
+      }
+
       requestAnimationFrame(tick);
     }
 
@@ -230,8 +239,3 @@ lookJoy.on('move', (evt, data) => {
 
 </body>
 </html>
-
-
-
-
-
