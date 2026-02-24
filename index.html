@@ -144,10 +144,15 @@ window.addEventListener('load', () => {
       });
 
       lookJoy.on('move', (evt, data) => {
-        if (!data || !data.vector) return;
-        const rotSpeed = 2.5;
-        cameraYaw.object3D.rotation.y -= data.vector.x * 0.05 * rotSpeed;
-      });
+  if (!data || !data.vector) return;
+
+  const look = cameraYaw.components['look-controls'];
+  if (!look) return;
+
+  const rotSpeed = 2.5;
+
+  look.yawObject.rotation.y -= data.vector.x * 0.05 * rotSpeed;
+});
 
     }
 
@@ -221,5 +226,6 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
