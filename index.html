@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -143,7 +143,7 @@ window.addEventListener('load', () => {
         size: 120
       });
 
-      lookJoy.on('move', (evt, data) => {
+lookJoy.on('move', (evt, data) => {
   if (!data || !data.vector) return;
 
   const look = cameraYaw.components['look-controls'];
@@ -151,7 +151,18 @@ window.addEventListener('load', () => {
 
   const rotSpeed = 2.5;
 
+  // Horizontal (yaw)
   look.yawObject.rotation.y -= data.vector.x * 0.05 * rotSpeed;
+
+  // Vertical (pitch)
+  look.pitchObject.rotation.x -= data.vector.y * 0.05 * rotSpeed;
+
+  // Limitar rotación vertical como hace la compu
+  const maxPitch = Math.PI / 2 - 0.1;
+  look.pitchObject.rotation.x = Math.max(
+    -maxPitch,
+    Math.min(maxPitch, look.pitchObject.rotation.x)
+  );
 });
 
     }
@@ -226,6 +237,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
