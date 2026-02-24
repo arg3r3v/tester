@@ -107,7 +107,7 @@ window.addEventListener('load', () => {
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
     /* ---------- DOS NIPPLES (solo touch) ---------- */
-    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isTouch) {
 
@@ -239,6 +239,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
