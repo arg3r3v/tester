@@ -216,9 +216,9 @@ window.addEventListener('load', () => {
       /* -------- ROTACIÓN NIPPLE CORRECTA -------- */
       const look = cameraYaw.components['look-controls'];
       if (look) {
-        const rotSpeed = 2.5;
+        const rotSpeed = 1.5;
 
-        look.yawObject.rotation.y -= lookInput.x * rotSpeed * delta;
+        look.yawObject.rotation.y -= -lookInput.x * rotSpeed * delta;
         look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
 
         const maxPitch = Math.PI / 2 - 0.1;
@@ -239,3 +239,4 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
