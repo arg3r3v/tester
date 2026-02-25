@@ -54,9 +54,9 @@
   </a-entity>
     
     <!-- Modelos -->
-    <a-entity gltf-model="#tronco" position="0 0 -3"></a-entity>
-    <a-entity gltf-model="#ramas" position="0 0 -3"></a-entity>
-    <a-entity gltf-model="#hongos" position="0 0 -3"></a-entity>
+    <a-entity gltf-model="#tronco" position="0 0 0"></a-entity>
+    <a-entity gltf-model="#ramas" position="0 0 0"></a-entity>
+    <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
 
     <!-- RIG -->
     <a-entity id="rig" position="0 0 0">
@@ -202,7 +202,25 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-        rig.object3D.position.addScaledVector(moveVector, speed * delta);
+        const proposedPosition = rig.object3D.position.clone();
+proposedPosition.addScaledVector(moveVector, speed * delta);
+
+/* --- VALIDAR CONTRA NAVMESH --- */
+if (navMeshEl && navMeshEl.object3D) {
+
+  const origin = proposedPosition.clone();
+  origin.y += 5;
+
+  raycaster.set(origin, downVector);
+  const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+
+  if (intersects.length > 0) {
+    // ✅ Solo si hay suelo, mover
+    rig.object3D.position.copy(proposedPosition);
+    rig.object3D.position.y = intersects[0].point.y;
+  }
+
+}
 
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
         const targetRotation = moveAngle + Math.PI;
@@ -263,6 +281,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
