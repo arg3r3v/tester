@@ -89,6 +89,7 @@ window.addEventListener('load', () => {
     const player = document.querySelector('#player');
     const camera = document.querySelector('#gameCamera');
     const cameraYaw = document.querySelector('#cameraYaw');
+    const navMeshEl = document.querySelector('[nav-mesh]');
 
     if (!rig || !player || !camera) {
       console.warn('Faltan elementos rig/player/camera');
@@ -104,6 +105,9 @@ window.addEventListener('load', () => {
     let lastTime = performance.now();
     let moving = false;
 
+    const raycaster = new THREE.Raycaster();
+    const downVector = new THREE.Vector3(0, -1, 0);
+    
     function angleDifference(a, b) {
       let diff = b - a;
       return Math.atan2(Math.sin(diff), Math.cos(diff));
@@ -220,6 +224,19 @@ window.addEventListener('load', () => {
         }
       }
 
+/* -------- PEGAR AL NAVMESH -------- */
+      if (navMeshEl && navMeshEl.object3D) {
+        const origin = rig.object3D.position.clone();
+        origin.y += 5; // lanzar desde arriba
+
+        raycaster.set(origin, downVector);
+        const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+
+        if (intersects.length > 0) {
+          rig.object3D.position.y = intersects[0].point.y;
+        }
+      }
+      
       /* -------- ROTACIÓN NIPPLE CORRECTA -------- */
       const look = cameraYaw.components['look-controls'];
       if (look) {
@@ -246,6 +263,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
