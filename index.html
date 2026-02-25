@@ -44,8 +44,15 @@
       <a-asset-item id="ramas" src="assets/ramas.glb"></a-asset-item>
       <a-asset-item id="hongos" src="assets/hongos.glb"></a-asset-item>
       <a-asset-item id="tlacuache" src="assets/tlacuache.glb"></a-asset-item>
+      <a-asset-item id="navmesh" src="assets/navmesh.glb"></a-asset-item>  
     </a-assets>
 
+<a-entity
+    gltf-model="#navmesh"
+    nav-mesh
+    visible="false">
+  </a-entity>
+    
     <!-- Modelos -->
     <a-entity gltf-model="#tronco" position="0 0 -3"></a-entity>
     <a-entity gltf-model="#ramas" position="0 0 -3"></a-entity>
@@ -239,6 +246,7 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
 
 
