@@ -9,8 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 
   <style>
-    /* Zona joystick, invisible en desktop */
-    #joyLeft, #joyRight {
+    /* Zona joystick*/
+  #joyLeft, #joyRight {
   position: absolute;
   bottom: 20px;
   width: 160px;
@@ -29,7 +29,7 @@
 
 <body style="margin:0; overflow:hidden;">
 
-  <!-- Zona para joystick (solo se activa en touch) -->
+  <!--Zona para joystick-->
 <div id="joyLeft"></div>
 <div id="joyRight"></div>
 
@@ -47,7 +47,7 @@
       <a-asset-item id="navmesh" src="assets/navmesh.glb"></a-asset-item>  
     </a-assets>
 
-<a-entity
+  <a-entity
     gltf-model="#navmesh"
     nav-mesh
     visible="false">
@@ -67,7 +67,7 @@
                 animation-mixer="clip: walk; loop: repeat">
       </a-entity>
 
-      <!-- CÁMARA: pivot -> yaw (look-controls) -> boom -> camera -->
+      <!-- CÁMARA -->
       <a-entity id="cameraPivot" position="0 1.5 0">
         <a-entity id="cameraYaw" look-controls="pointerLockEnabled: false">
           <a-entity id="cameraBoom" position="0 1 4">
@@ -101,7 +101,7 @@ window.addEventListener('load', () => {
 
     let keys = {};
     let nippleVector = new THREE.Vector2(0, 0);
-    let lookInput = new THREE.Vector2(0, 0); // 👈 SOLO agregado para rotación
+    let lookInput = new THREE.Vector2(0, 0);
     let lastTime = performance.now();
     let moving = false;
 
@@ -113,11 +113,11 @@ window.addEventListener('load', () => {
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    /* ---------- KEYBOARD ---------- */
+    /*TECLADO*/
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    /* ---------- DOS NIPPLES (solo touch) ---------- */
+    /*DOS NIPPLES (solo touch)*/
     const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isTouch) {
@@ -128,7 +128,7 @@ window.addEventListener('load', () => {
       leftZone.style.display = 'block';
       rightZone.style.display = 'block';
 
-      /* 🎮 IZQUIERDO - MOVIMIENTO */
+      /*IZQUIERDO - MOVIMIENTO*/
       const moveJoy = nipplejs.create({
         zone: leftZone,
         mode: 'static',
@@ -146,7 +146,7 @@ window.addEventListener('load', () => {
         nippleVector.set(0, 0);
       });
 
-      /* 🎮 DERECHO - ROTACIÓN */
+      /*DERECHO - ROTACIÓN*/
       const lookJoy = nipplejs.create({
         zone: rightZone,
         mode: 'static',
@@ -165,12 +165,12 @@ window.addEventListener('load', () => {
       });
     }
 
-    /* ---------- INIT ANIMATION ---------- */
+    /*ANIMACION*/
     player.addEventListener('model-loaded', () => {
       player.components['animation-mixer']?.pause();
     });
 
-    /* ---------- MAIN LOOP ---------- */
+    /*CONTROLES*/
     function tick() {
       const now = performance.now();
       const delta = (now - lastTime) / 1000;
@@ -205,7 +205,7 @@ window.addEventListener('load', () => {
         const proposedPosition = rig.object3D.position.clone();
 proposedPosition.addScaledVector(moveVector, speed * delta);
 
-/* --- VALIDAR CONTRA NAVMESH --- */
+/*VALIDAR CONTRA NAVMESH*/
 if (navMeshEl && navMeshEl.object3D) {
 
   const origin = proposedPosition.clone();
@@ -215,7 +215,6 @@ if (navMeshEl && navMeshEl.object3D) {
   const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
 
   if (intersects.length > 0) {
-    // ✅ Solo si hay suelo, mover
     rig.object3D.position.copy(proposedPosition);
     rig.object3D.position.y = intersects[0].point.y;
   }
@@ -242,10 +241,9 @@ if (navMeshEl && navMeshEl.object3D) {
         }
       }
 
-/* -------- PEGAR AL NAVMESH -------- */
       if (navMeshEl && navMeshEl.object3D) {
         const origin = rig.object3D.position.clone();
-        origin.y += 5; // lanzar desde arriba
+        origin.y += 5;
 
         raycaster.set(origin, downVector);
         const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
@@ -255,7 +253,7 @@ if (navMeshEl && navMeshEl.object3D) {
         }
       }
       
-      /* -------- ROTACIÓN NIPPLE CORRECTA -------- */
+      /*ROTACIÓN NIPPLE*/
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
@@ -281,9 +279,6 @@ if (navMeshEl && navMeshEl.object3D) {
 
 </body>
 </html>
-
-
-
 
 
 
