@@ -316,11 +316,12 @@ window.addEventListener('load', () => {
         );
       }
 
-      /* DETECCIÓN DE SALIDA */
-      if (salida && salida.object3D && !alreadyTriggered) {
+      /* ===== DETECCIÓN DE SALIDA (VERSIÓN DEFINITIVA) ===== */
+      if (salidaReady && !alreadyTriggered) {
 
         const playerPos = rig.object3D.position.clone();
         const salidaPos = new THREE.Vector3();
+
         salida.object3D.getWorldPosition(salidaPos);
 
         playerPos.y = 0;
@@ -330,6 +331,8 @@ window.addEventListener('load', () => {
 
         if (distance < exitDistance) {
           alreadyTriggered = true;
+
+          console.log("Salida activada");
 
           setTimeout(() => {
             window.location.href = "https://youtu.be/8Xo1rKX7Les?si=jWto45dyINOwZaBx";
@@ -348,3 +351,4 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
