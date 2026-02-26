@@ -95,6 +95,7 @@ window.addEventListener('load', () => {
 
     const speed = 4;
     const rotationSmooth = 0.15;
+    const subSteps = 8; // 🔥 MÁS PASOS = MÁS DESLIZAMIENTO
 
     let keys = {};
     let nippleVector = new THREE.Vector2(0, 0);
@@ -153,44 +154,55 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-        const current = rig.object3D.position.clone();
-        const fullMove = moveVector.clone().multiplyScalar(speed * delta);
+        const totalMove = moveVector.clone().multiplyScalar(speed * delta);
+        const stepMove = totalMove.clone().divideScalar(subSteps);
 
-        let finalPosition = current.clone();
+        let currentPosition = rig.object3D.position.clone();
 
-        // 1️⃣ Intentar movimiento completo
-        let testFull = current.clone().add(fullMove);
-        let heightFull = getNavmeshHeight(testFull);
+        for (let i = 0; i < subSteps; i++) {
 
-        if (heightFull !== null) {
-          finalPosition.copy(testFull);
-          finalPosition.y = heightFull;
-        } else {
+          let moved = false;
 
-          // 2️⃣ Intentar solo eje X
-          let testX = current.clone();
-          testX.x += fullMove.x;
-          let heightX = getNavmeshHeight(testX);
+          // Intento completo
+          let testFull = currentPosition.clone().add(stepMove);
+          let heightFull = getNavmeshHeight(testFull);
 
-          // 3️⃣ Intentar solo eje Z
-          let testZ = current.clone();
-          testZ.z += fullMove.z;
-          let heightZ = getNavmeshHeight(testZ);
-
-          if (heightX !== null) {
-            finalPosition.x = testX.x;
-            finalPosition.y = heightX;
+          if (heightFull !== null) {
+            currentPosition.copy(testFull);
+            currentPosition.y = heightFull;
+            moved = true;
           }
 
-          if (heightZ !== null) {
-            finalPosition.z = testZ.z;
-            finalPosition.y = heightZ;
+          if (!moved) {
+            // Intento eje X
+            let testX = currentPosition.clone();
+            testX.x += stepMove.x;
+            let heightX = getNavmeshHeight(testX);
+
+            if (heightX !== null) {
+              currentPosition.x = testX.x;
+              currentPosition.y = heightX;
+              moved = true;
+            }
+
+            // Intento eje Z
+            let testZ = currentPosition.clone();
+            testZ.z += stepMove.z;
+            let heightZ = getNavmeshHeight(testZ);
+
+            if (heightZ !== null) {
+              currentPosition.z = testZ.z;
+              currentPosition.y = heightZ;
+              moved = true;
+            }
           }
+
+          // Si no pudo moverse en ningún eje, se queda pegado en borde
         }
 
-        rig.object3D.position.copy(finalPosition);
+        rig.object3D.position.copy(currentPosition);
 
-        // ROTACIÓN
+        // ROTACIÓN PERSONAJE
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
         const targetRotation = moveAngle + Math.PI;
         const currentRotation = player.object3D.rotation.y;
@@ -209,6 +221,7 @@ window.addEventListener('load', () => {
         }
       }
 
+      // ROTACIÓN CÁMARA
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
@@ -232,6 +245,7 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
 
 
 
