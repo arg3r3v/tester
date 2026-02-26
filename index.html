@@ -93,9 +93,13 @@ window.addEventListener('load', () => {
     const cameraYaw = document.querySelector('#cameraYaw');
     const navMeshEl = document.querySelector('[nav-mesh]');
 
+    if (!rig || !player || !camera) {
+      console.warn('Faltan elementos rig/player/camera');
+      return;
+    }
+
     const speed = 4;
     const rotationSmooth = 0.15;
-    const subSteps = 8; // 🔥 MÁS PASOS = MÁS DESLIZAMIENTO
 
     let keys = {};
     let nippleVector = new THREE.Vector2(0, 0);
@@ -105,24 +109,70 @@ window.addEventListener('load', () => {
 
     const raycaster = new THREE.Raycaster();
     const downVector = new THREE.Vector3(0, -1, 0);
-
+    
     function angleDifference(a, b) {
       let diff = b - a;
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    function getNavmeshHeight(testPosition) {
-      if (!navMeshEl) return null;
-      const origin = testPosition.clone();
-      origin.y += 5;
-      raycaster.set(origin, downVector);
-      const hits = raycaster.intersectObject(navMeshEl.object3D, true);
-      return hits.length > 0 ? hits[0].point.y : null;
-    }
-
+    /*TECLADO*/
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
+    /*DOS NIPPLES (solo touch)*/
+    const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isTouch) {
+
+      const leftZone = document.getElementById('joyLeft');
+      const rightZone = document.getElementById('joyRight');
+
+      leftZone.style.display = 'block';
+      rightZone.style.display = 'block';
+
+      /*IZQUIERDO - MOVIMIENTO*/
+      const moveJoy = nipplejs.create({
+        zone: leftZone,
+        mode: 'static',
+        position: { left: '50%', top: '50%' },
+        color: 'white',
+        size: 120
+      });
+
+      moveJoy.on('move', (evt, data) => {
+        if (!data || !data.vector) return;
+        nippleVector.set(data.vector.x, data.vector.y);
+      });
+
+      moveJoy.on('end', () => {
+        nippleVector.set(0, 0);
+      });
+
+      /*DERECHO - ROTACIÓN*/
+      const lookJoy = nipplejs.create({
+        zone: rightZone,
+        mode: 'static',
+        position: { left: '50%', top: '50%' },
+        color: 'white',
+        size: 120
+      });
+
+      lookJoy.on('move', (evt, data) => {
+        if (!data || !data.vector) return;
+        lookInput.set(data.vector.x, data.vector.y);
+      });
+
+      lookJoy.on('end', () => {
+        lookInput.set(0, 0);
+      });
+    }
+
+    /*ANIMACION*/
+    player.addEventListener('model-loaded', () => {
+      player.components['animation-mixer']?.pause();
+    });
+
+    /*CONTROLES*/
     function tick() {
       const now = performance.now();
       const delta = (now - lastTime) / 1000;
@@ -154,59 +204,84 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-        const totalMove = moveVector.clone().multiplyScalar(speed * delta);
-        const stepMove = totalMove.clone().divideScalar(subSteps);
+       /*MOVIMIENTO CON DESLIZAMIENTO*/
+const subSteps = 12; // puedes subir a 10 o 12 si quieres más suavidad
 
-        let currentPosition = rig.object3D.position.clone();
+const totalMove = moveVector.clone().multiplyScalar(speed * delta);
+const stepMove = totalMove.clone().divideScalar(subSteps);
 
-        for (let i = 0; i < subSteps; i++) {
+let currentPosition = rig.object3D.position.clone();
 
-          let moved = false;
+for (let i = 0; i < subSteps; i++) {
 
-          // Intento completo
-          let testFull = currentPosition.clone().add(stepMove);
-          let heightFull = getNavmeshHeight(testFull);
+  let moved = false;
 
-          if (heightFull !== null) {
-            currentPosition.copy(testFull);
-            currentPosition.y = heightFull;
-            moved = true;
-          }
+  // Intento completo
+  let testFull = currentPosition.clone().add(stepMove);
+  let origin = testFull.clone();
+  origin.y += 5;
 
-          if (!moved) {
-            // Intento eje X
-            let testX = currentPosition.clone();
-            testX.x += stepMove.x;
-            let heightX = getNavmeshHeight(testX);
+  raycaster.set(origin, downVector);
+  let intersects = navMeshEl.object3D
+    ? raycaster.intersectObject(navMeshEl.object3D, true)
+    : [];
 
-            if (heightX !== null) {
-              currentPosition.x = testX.x;
-              currentPosition.y = heightX;
-              moved = true;
-            }
+  if (intersects.length > 0) {
+    currentPosition.copy(testFull);
+    currentPosition.y = intersects[0].point.y;
+    moved = true;
+  }
 
-            // Intento eje Z
-            let testZ = currentPosition.clone();
-            testZ.z += stepMove.z;
-            let heightZ = getNavmeshHeight(testZ);
+  if (!moved) {
 
-            if (heightZ !== null) {
-              currentPosition.z = testZ.z;
-              currentPosition.y = heightZ;
-              moved = true;
-            }
-          }
+    // Intento eje X
+    let testX = currentPosition.clone();
+    testX.x += stepMove.x;
 
-          // Si no pudo moverse en ningún eje, se queda pegado en borde
-        }
+    origin = testX.clone();
+    origin.y += 5;
 
-        rig.object3D.position.copy(currentPosition);
+    raycaster.set(origin, downVector);
+    intersects = navMeshEl.object3D
+      ? raycaster.intersectObject(navMeshEl.object3D, true)
+      : [];
 
-        // ROTACIÓN PERSONAJE
+    if (intersects.length > 0) {
+      currentPosition.x = testX.x;
+      currentPosition.y = intersects[0].point.y;
+      moved = true;
+    }
+
+    // Intento eje Z
+    let testZ = currentPosition.clone();
+    testZ.z += stepMove.z;
+
+    origin = testZ.clone();
+    origin.y += 5;
+
+    raycaster.set(origin, downVector);
+    intersects = navMeshEl.object3D
+      ? raycaster.intersectObject(navMeshEl.object3D, true)
+      : [];
+
+    if (intersects.length > 0) {
+      currentPosition.z = testZ.z;
+      currentPosition.y = intersects[0].point.y;
+      moved = true;
+    }
+  }
+
+  // si no se movió en ningún eje, simplemente se queda en el borde
+}
+
+rig.object3D.position.copy(currentPosition);
+
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
         const targetRotation = moveAngle + Math.PI;
+
         const currentRotation = player.object3D.rotation.y;
         const diff = angleDifference(currentRotation, targetRotation);
+
         player.object3D.rotation.y += diff * rotationSmooth;
 
         if (!moving) {
@@ -221,12 +296,26 @@ window.addEventListener('load', () => {
         }
       }
 
-      // ROTACIÓN CÁMARA
+      if (navMeshEl && navMeshEl.object3D) {
+        const origin = rig.object3D.position.clone();
+        origin.y += 5;
+
+        raycaster.set(origin, downVector);
+        const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+
+        if (intersects.length > 0) {
+          rig.object3D.position.y = intersects[0].point.y;
+        }
+      }
+      
+      /*ROTACIÓN NIPPLE*/
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
+
         look.yawObject.rotation.y -= lookInput.x * rotSpeed * delta;
         look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
+
         const maxPitch = Math.PI / 2 - 0.1;
         look.pitchObject.rotation.x = Math.max(
           -maxPitch,
@@ -245,6 +334,7 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
 
 
 
