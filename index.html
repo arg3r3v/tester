@@ -93,16 +93,15 @@ window.addEventListener('load', () => {
   const scene = document.querySelector('a-scene');
   scene.addEventListener('loaded', () => {
 
-
-const salida = document.querySelector('#salida');
-const exitDistance = 1.5; // qué tan cerca debe estar para activar
-let alreadyTriggered = false;
-    
     const rig = document.querySelector('#rig');
     const player = document.querySelector('#player');
     const camera = document.querySelector('#gameCamera');
     const cameraYaw = document.querySelector('#cameraYaw');
     const navMeshEl = document.querySelector('[nav-mesh]');
+    const salida = document.querySelector('#salida');
+
+    const exitDistance = 1.5;
+    let alreadyTriggered = false;
 
     if (!rig || !player || !camera) {
       console.warn('Faltan elementos rig/player/camera');
@@ -120,17 +119,17 @@ let alreadyTriggered = false;
 
     const raycaster = new THREE.Raycaster();
     const downVector = new THREE.Vector3(0, -1, 0);
-    
+
     function angleDifference(a, b) {
       let diff = b - a;
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    /*TECLADO*/
+    /* TECLADO */
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    /*DOS NIPPLES (solo touch)*/
+    /* JOYSTICKS */
     const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isTouch) {
@@ -141,7 +140,6 @@ let alreadyTriggered = false;
       leftZone.style.display = 'block';
       rightZone.style.display = 'block';
 
-      /*IZQUIERDO - MOVIMIENTO*/
       const moveJoy = nipplejs.create({
         zone: leftZone,
         mode: 'static',
@@ -155,11 +153,8 @@ let alreadyTriggered = false;
         nippleVector.set(data.vector.x, data.vector.y);
       });
 
-      moveJoy.on('end', () => {
-        nippleVector.set(0, 0);
-      });
+      moveJoy.on('end', () => nippleVector.set(0, 0));
 
-      /*DERECHO - ROTACIÓN*/
       const lookJoy = nipplejs.create({
         zone: rightZone,
         mode: 'static',
@@ -173,18 +168,16 @@ let alreadyTriggered = false;
         lookInput.set(data.vector.x, data.vector.y);
       });
 
-      lookJoy.on('end', () => {
-        lookInput.set(0, 0);
-      });
+      lookJoy.on('end', () => lookInput.set(0, 0));
     }
 
-    /*ANIMACION*/
+    /* ANIMACIÓN */
     player.addEventListener('model-loaded', () => {
       player.components['animation-mixer']?.pause();
     });
 
-    /*CONTROLES*/
     function tick() {
+
       const now = performance.now();
       const delta = (now - lastTime) / 1000;
       lastTime = now;
@@ -215,80 +208,72 @@ let alreadyTriggered = false;
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-/*MOVIMIENTO CON DESLIZAMIENTO AVANZADO*/
-const subSteps = 8;
-const cornerFriction = 0.5; // reduce fuerza cuando está atrapado
+        /* MOVIMIENTO CON DESLIZAMIENTO */
+        const subSteps = 8;
+        const cornerFriction = 0.5;
 
-const totalMove = moveVector.clone().multiplyScalar(speed * delta);
-const stepMove = totalMove.clone().divideScalar(subSteps);
+        const totalMove = moveVector.clone().multiplyScalar(speed * delta);
+        const stepMove = totalMove.clone().divideScalar(subSteps);
 
-let currentPosition = rig.object3D.position.clone();
+        let currentPosition = rig.object3D.position.clone();
 
-for (let i = 0; i < subSteps; i++) {
+        for (let i = 0; i < subSteps; i++) {
 
-  let moved = false;
+          let moved = false;
 
-  // ===== INTENTO COMPLETO =====
-  let testFull = currentPosition.clone().add(stepMove);
-  let origin = testFull.clone();
-  origin.y += 5;
+          let testFull = currentPosition.clone().add(stepMove);
+          let origin = testFull.clone();
+          origin.y += 5;
 
-  raycaster.set(origin, downVector);
-  let intersects = navMeshEl.object3D
-    ? raycaster.intersectObject(navMeshEl.object3D, true)
-    : [];
+          raycaster.set(origin, downVector);
+          let intersects = navMeshEl && navMeshEl.object3D
+            ? raycaster.intersectObject(navMeshEl.object3D, true)
+            : [];
 
-  if (intersects.length > 0) {
-    currentPosition.copy(testFull);
-    currentPosition.y = intersects[0].point.y;
-    moved = true;
-  }
+          if (intersects.length > 0) {
+            currentPosition.copy(testFull);
+            currentPosition.y = intersects[0].point.y;
+            moved = true;
+          }
 
-  // ===== INTENTOS POR EJE =====
-  if (!moved) {
+          if (!moved) {
 
-    const tryAxis = (axis, amount) => {
-      let reduced = amount;
-      for (let r = 0; r < 3; r++) { // intentos progresivos
-        let test = currentPosition.clone();
-        test[axis] += reduced;
+            const tryAxis = (axis, amount) => {
+              let reduced = amount;
+              for (let r = 0; r < 3; r++) {
+                let test = currentPosition.clone();
+                test[axis] += reduced;
 
-        let o = test.clone();
-        o.y += 5;
+                let o = test.clone();
+                o.y += 5;
 
-        raycaster.set(o, downVector);
-        let hits = navMeshEl.object3D
-          ? raycaster.intersectObject(navMeshEl.object3D, true)
-          : [];
+                raycaster.set(o, downVector);
+                let hits = navMeshEl && navMeshEl.object3D
+                  ? raycaster.intersectObject(navMeshEl.object3D, true)
+                  : [];
 
-        if (hits.length > 0) {
-          currentPosition[axis] = test[axis];
-          currentPosition.y = hits[0].point.y;
-          return true;
+                if (hits.length > 0) {
+                  currentPosition[axis] = test[axis];
+                  currentPosition.y = hits[0].point.y;
+                  return true;
+                }
+
+                reduced *= cornerFriction;
+              }
+              return false;
+            };
+
+            tryAxis("x", stepMove.x);
+            tryAxis("z", stepMove.z);
+          }
         }
 
-        reduced *= cornerFriction; // reduce movimiento
-      }
-      return false;
-    };
-
-    const movedX = tryAxis("x", stepMove.x);
-    const movedZ = tryAxis("z", stepMove.z);
-
-    moved = movedX || movedZ;
-  }
-
-  // si no se movió nada, simplemente se queda en el borde
-}
-
-rig.object3D.position.copy(currentPosition);
+        rig.object3D.position.copy(currentPosition);
 
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
         const targetRotation = moveAngle + Math.PI;
-
         const currentRotation = player.object3D.rotation.y;
         const diff = angleDifference(currentRotation, targetRotation);
-
         player.object3D.rotation.y += diff * rotationSmooth;
 
         if (!moving) {
@@ -303,6 +288,7 @@ rig.object3D.position.copy(currentPosition);
         }
       }
 
+      /* Ajuste altura navmesh */
       if (navMeshEl && navMeshEl.object3D) {
         const origin = rig.object3D.position.clone();
         origin.y += 5;
@@ -314,8 +300,8 @@ rig.object3D.position.copy(currentPosition);
           rig.object3D.position.y = intersects[0].point.y;
         }
       }
-      
-      /*ROTACIÓN NIPPLE*/
+
+      /* ROTACIÓN CÁMARA */
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
@@ -329,24 +315,28 @@ rig.object3D.position.copy(currentPosition);
           Math.min(maxPitch, look.pitchObject.rotation.x)
         );
       }
-      
-/* DETECCIÓN DE SALIDA */
-if (salida && !alreadyTriggered) {
 
-  const playerPos = rig.object3D.position;
-  const salidaPos = salida.object3D.position;
+      /* DETECCIÓN DE SALIDA */
+      if (salida && salida.object3D && !alreadyTriggered) {
 
-  const distance = playerPos.distanceTo(salidaPos);
+        const playerPos = rig.object3D.position.clone();
+        const salidaPos = new THREE.Vector3();
+        salida.object3D.getWorldPosition(salidaPos);
 
-  if (distance < exitDistance) {
-    alreadyTriggered = true;
+        playerPos.y = 0;
+        salidaPos.y = 0;
 
-    // pequeña pausa opcional
-    setTimeout(() => {
-      window.location.href = "https://youtu.be/8Xo1rKX7Les?si=jWto45dyINOwZaBx";
-    }, 300);
-  }
-}
+        const distance = playerPos.distanceTo(salidaPos);
+
+        if (distance < exitDistance) {
+          alreadyTriggered = true;
+
+          setTimeout(() => {
+            window.location.href = "https://youtu.be/8Xo1rKX7Les?si=jWto45dyINOwZaBx";
+          }, 300);
+        }
+      }
+
       requestAnimationFrame(tick);
     }
 
@@ -358,14 +348,3 @@ if (salida && !alreadyTriggered) {
   
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
