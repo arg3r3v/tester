@@ -58,7 +58,7 @@
     <a-entity gltf-model="#tronco" position="0 0 0"></a-entity>
     <a-entity gltf-model="#ramas" position="0 0 0"></a-entity>
     <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
-    <a-entity id="salidaEntity" gltf-model="#salida" position="0 0 0"></a-entity>
+    <a-entity gltf-model="#salida" position="0 0 0"></a-entity>
 
     <!-- RIG -->
     <a-entity id="rig" position="0 0 0">
@@ -66,8 +66,7 @@
       <!-- TLACUACHE -->
       <a-entity id="player"
                 gltf-model="#tlacuache"
-                animation-mixer="clip: walk; loop: repeat"
-        collision-check="target: #salidaEntity; radius: 1.0; url: https://tupagina.com">
+                animation-mixer="clip: walk; loop: repeat">
       </a-entity>
 
       <!-- CÁMARA -->
@@ -84,30 +83,6 @@
   </a-scene>
 
 <script>
-
-AFRAME.registerComponent('collision-check', {
-  schema: {
-    target: {type: 'selector'},
-    radius: {type: 'number', default: 1.0},  // Radio de colisión (ajusta al tamaño de salida)
-    url: {type: 'string', default: 'https://ejemplo.com'}
-  },
-  
-  tick: function () {
-    if (!this.targetEl) return;
-    
-    const playerPos = this.el.object3D.position;
-    const targetPos = this.targetEl.object3D.position;
-    const distance = playerPos.distanceTo(targetPos);
-    
-    if (distance < this.data.radius && !this.colliding) {
-      this.colliding = true;
-      window.location.href = this.data.url;  // Redirige
-    } else if (distance >= this.data.radius) {
-      this.colliding = false;
-    }
-  }
-});
-  
 window.addEventListener('load', () => {
   const scene = document.querySelector('a-scene');
   scene.addEventListener('loaded', () => {
@@ -302,20 +277,7 @@ if (navMeshEl && navMeshEl.object3D) {
 
   });
 });
-  
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
