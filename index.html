@@ -60,10 +60,13 @@
     <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
 
     <!-- salida -->
-<a-entity
-  id="salida"
-  gltf-model="#salida"
-  position="0 0 0">
+<a-entity id="salida" position="X Y Z">
+  <a-entity
+    id="salidaTrigger"
+    geometry="primitive: sphere; radius: 1.5"
+    material="opacity: 0; transparent: true"
+    position="0 1 0">
+  </a-entity>
 </a-entity>
 
     <!-- RIG -->
@@ -98,7 +101,7 @@ window.addEventListener('load', () => {
     const camera = document.querySelector('#gameCamera');
     const cameraYaw = document.querySelector('#cameraYaw');
     const navMeshEl = document.querySelector('[nav-mesh]');
-    const salida = document.querySelector('#salida');
+    const salidaTrigger = document.querySelector('#salidaTrigger');
 
     const exitDistance = 1.5;
     let alreadyTriggered = false;
@@ -208,7 +211,6 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-        /* MOVIMIENTO CON DESLIZAMIENTO */
         const subSteps = 8;
         const cornerFriction = 0.5;
 
@@ -316,18 +318,14 @@ window.addEventListener('load', () => {
         );
       }
 
-      /* ===== DETECCIÓN DE SALIDA (VERSIÓN DEFINITIVA) ===== */
-      if (salidaReady && !alreadyTriggered) {
+      /* ===== DETECCIÓN DE SALIDA CON TRIGGER ===== */
+      if (salidaTrigger && !alreadyTriggered) {
 
         const playerPos = rig.object3D.position.clone();
-        const salidaPos = new THREE.Vector3();
+        const triggerPos = new THREE.Vector3();
+        salidaTrigger.object3D.getWorldPosition(triggerPos);
 
-        salida.object3D.getWorldPosition(salidaPos);
-
-        playerPos.y = 0;
-        salidaPos.y = 0;
-
-        const distance = playerPos.distanceTo(salidaPos);
+        const distance = playerPos.distanceTo(triggerPos);
 
         if (distance < exitDistance) {
           alreadyTriggered = true;
@@ -351,4 +349,5 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
 
