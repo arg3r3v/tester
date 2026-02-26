@@ -93,11 +93,6 @@ window.addEventListener('load', () => {
     const cameraYaw = document.querySelector('#cameraYaw');
     const navMeshEl = document.querySelector('[nav-mesh]');
 
-    if (!rig || !player || !camera) {
-      console.warn('Faltan elementos rig/player/camera');
-      return;
-    }
-
     const speed = 4;
     const rotationSmooth = 0.15;
 
@@ -115,125 +110,18 @@ window.addEventListener('load', () => {
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    // devuelve el primer intersect o null
-    function getNavmeshIntersection(testPosition) {
-      if (!navMeshEl || !navMeshEl.object3D) return null;
+    function getNavmeshHeight(testPosition) {
+      if (!navMeshEl) return null;
       const origin = testPosition.clone();
       origin.y += 5;
       raycaster.set(origin, downVector);
       const hits = raycaster.intersectObject(navMeshEl.object3D, true);
-      return hits.length > 0 ? hits[0] : null;
+      return hits.length > 0 ? hits[0].point.y : null;
     }
 
-    // devuelve la altura (y) sobre el navmesh o null
-    function getNavmeshHeight(testPosition) {
-      const hit = getNavmeshIntersection(testPosition);
-      return hit ? hit.point.y : null;
-    }
-
-    // obtiene la normal de la cara del hit en world space (robusto para BufferGeometry)
-    function getFaceNormalFromHit(hit) {
-      if (!hit) return null;
-      // si face.normal ya existe, usarla (y transformarla)
-      if (hit.face && hit.face.normal && hit.object && hit.object.matrixWorld) {
-        const n = hit.face.normal.clone();
-        const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
-        n.applyMatrix3(normalMatrix).normalize();
-        return n;
-      }
-      // intentar reconstruir desde geometry usando faceIndex
-      const mesh = hit.object;
-      const geom = mesh.geometry;
-      if (!geom) return null;
-      const posAttr = geom.attributes.position;
-      if (!posAttr) return null;
-
-      let aIndex, bIndex, cIndex;
-
-      if (geom.index) {
-        // index exists: faceIndex -> three indices at 3*faceIndex..3*faceIndex+2
-        const i = hit.faceIndex * 3;
-        // note: BufferAttribute .getX(i) returns integer index stored in index buffer
-        aIndex = geom.index.getX(i);
-        bIndex = geom.index.getX(i + 1);
-        cIndex = geom.index.getX(i + 2);
-      } else {
-        // non-indexed: vertices are sequential: vertex = faceIndex*3 + offset
-        const base = hit.faceIndex * 3;
-        aIndex = base;
-        bIndex = base + 1;
-        cIndex = base + 2;
-      }
-
-      // read vertex positions in local space
-      const vA = new THREE.Vector3().fromBufferAttribute(posAttr, aIndex);
-      const vB = new THREE.Vector3().fromBufferAttribute(posAttr, bIndex);
-      const vC = new THREE.Vector3().fromBufferAttribute(posAttr, cIndex);
-
-      // transform to world space
-      vA.applyMatrix4(mesh.matrixWorld);
-      vB.applyMatrix4(mesh.matrixWorld);
-      vC.applyMatrix4(mesh.matrixWorld);
-
-      // compute normal
-      const cb = new THREE.Vector3().subVectors(vC, vB);
-      const ab = new THREE.Vector3().subVectors(vA, vB);
-      const normal = new THREE.Vector3().crossVectors(cb, ab).normalize();
-      return normal.length() > 0 ? normal : null;
-    }
-
-    /* TECLADO */
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    /* DOS NIPPLES */
-    const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    if (isTouch) {
-
-      const leftZone = document.getElementById('joyLeft');
-      const rightZone = document.getElementById('joyRight');
-
-      leftZone.style.display = 'block';
-      rightZone.style.display = 'block';
-
-      const moveJoy = nipplejs.create({
-        zone: leftZone,
-        mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: 'white',
-        size: 120
-      });
-
-      moveJoy.on('move', (evt, data) => {
-        if (!data || !data.vector) return;
-        nippleVector.set(data.vector.x, data.vector.y);
-      });
-
-      moveJoy.on('end', () => nippleVector.set(0, 0));
-
-      const lookJoy = nipplejs.create({
-        zone: rightZone,
-        mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: 'white',
-        size: 120
-      });
-
-      lookJoy.on('move', (evt, data) => {
-        if (!data || !data.vector) return;
-        lookInput.set(data.vector.x, data.vector.y);
-      });
-
-      lookJoy.on('end', () => lookInput.set(0, 0));
-    }
-
-    /* ANIMACION */
-    player.addEventListener('model-loaded', () => {
-      player.components['animation-mixer']?.pause();
-    });
-
-    /* LOOP */
     function tick() {
       const now = performance.now();
       const delta = (now - lastTime) / 1000;
@@ -265,76 +153,44 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-        const currentPosition = rig.object3D.position.clone();
+        const current = rig.object3D.position.clone();
         const fullMove = moveVector.clone().multiplyScalar(speed * delta);
 
-        let moved = false;
+        let finalPosition = current.clone();
 
-        // 1) Intento completo
-        let proposed = currentPosition.clone().add(fullMove);
-        let height = getNavmeshHeight(proposed);
+        // 1️⃣ Intentar movimiento completo
+        let testFull = current.clone().add(fullMove);
+        let heightFull = getNavmeshHeight(testFull);
 
-        if (height !== null) {
-          rig.object3D.position.copy(proposed);
-          rig.object3D.position.y = height;
-          moved = true;
-        }
+        if (heightFull !== null) {
+          finalPosition.copy(testFull);
+          finalPosition.y = heightFull;
+        } else {
 
-        // 2) Si no, reducción progresiva (deslizamiento suave)
-        if (!moved) {
-          const steps = 6;
-          for (let i = steps; i > 0; i--) {
-            const factor = i / steps;
-            const testMove = fullMove.clone().multiplyScalar(factor);
-            proposed = currentPosition.clone().add(testMove);
-            height = getNavmeshHeight(proposed);
-            if (height !== null) {
-              rig.object3D.position.copy(proposed);
-              rig.object3D.position.y = height;
-              moved = true;
-              break;
-            }
+          // 2️⃣ Intentar solo eje X
+          let testX = current.clone();
+          testX.x += fullMove.x;
+          let heightX = getNavmeshHeight(testX);
+
+          // 3️⃣ Intentar solo eje Z
+          let testZ = current.clone();
+          testZ.z += fullMove.z;
+          let heightZ = getNavmeshHeight(testZ);
+
+          if (heightX !== null) {
+            finalPosition.x = testX.x;
+            finalPosition.y = heightX;
+          }
+
+          if (heightZ !== null) {
+            finalPosition.z = testZ.z;
+            finalPosition.y = heightZ;
           }
         }
 
-        // 3) Si sigue sin moverse, intentar deslizar proyectando sobre la cara del navmesh
-        if (!moved) {
-          const currentHit = getNavmeshIntersection(currentPosition);
-          const faceNormal = currentHit ? getFaceNormalFromHit(currentHit) : null;
+        rig.object3D.position.copy(finalPosition);
 
-          if (faceNormal) {
-            // projección del movimiento completo sobre el plano de la cara
-            const slideVec = fullMove.clone().projectOnPlane(faceNormal);
-
-            if (slideVec.length() > 0.0001) {
-              // intentar slide completo
-              proposed = currentPosition.clone().add(slideVec);
-              height = getNavmeshHeight(proposed);
-              if (height !== null) {
-                rig.object3D.position.copy(proposed);
-                rig.object3D.position.y = height;
-                moved = true;
-              } else {
-                // reducción progresiva sobre slide
-                const steps = 6;
-                for (let i = steps; i > 0; i--) {
-                  const factor = i / steps;
-                  const testMove = slideVec.clone().multiplyScalar(factor);
-                  proposed = currentPosition.clone().add(testMove);
-                  height = getNavmeshHeight(proposed);
-                  if (height !== null) {
-                    rig.object3D.position.copy(proposed);
-                    rig.object3D.position.y = height;
-                    moved = true;
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        /* ROTACION PERSONAJE */
+        // ROTACIÓN
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
         const targetRotation = moveAngle + Math.PI;
         const currentRotation = player.object3D.rotation.y;
@@ -353,7 +209,6 @@ window.addEventListener('load', () => {
         }
       }
 
-      /* ROTACIÓN CÁMARA */
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
@@ -377,6 +232,7 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
 
 
 
