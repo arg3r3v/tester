@@ -58,7 +58,13 @@
     <a-entity gltf-model="#tronco" position="0 0 0"></a-entity>
     <a-entity gltf-model="#ramas" position="0 0 0"></a-entity>
     <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
-    <a-entity gltf-model="#salida" position="0 0 0"></a-entity>
+
+    <!-- salida -->
+<a-entity
+  id="salida"
+  gltf-model="#salidaModel"
+  position="0 0 0"">
+</a-entity>
 
     <!-- RIG -->
     <a-entity id="rig" position="0 0 0">
@@ -87,6 +93,11 @@ window.addEventListener('load', () => {
   const scene = document.querySelector('a-scene');
   scene.addEventListener('loaded', () => {
 
+
+const salida = document.querySelector('#salida');
+const exitDistance = 1.5; // qué tan cerca debe estar para activar
+let alreadyTriggered = false;
+    
     const rig = document.querySelector('#rig');
     const player = document.querySelector('#player');
     const camera = document.querySelector('#gameCamera');
@@ -318,7 +329,24 @@ rig.object3D.position.copy(currentPosition);
           Math.min(maxPitch, look.pitchObject.rotation.x)
         );
       }
+      
+/* DETECCIÓN DE SALIDA */
+if (salida && !alreadyTriggered) {
 
+  const playerPos = rig.object3D.position;
+  const salidaPos = salida.object3D.position;
+
+  const distance = playerPos.distanceTo(salidaPos);
+
+  if (distance < exitDistance) {
+    alreadyTriggered = true;
+
+    // pequeña pausa opcional
+    setTimeout(() => {
+      window.location.href = "https://youtu.be/8Xo1rKX7Les?si=jWto45dyINOwZaBx";
+    }, 300);
+  }
+}
       requestAnimationFrame(tick);
     }
 
@@ -330,6 +358,7 @@ rig.object3D.position.copy(currentPosition);
   
 </body>
 </html>
+
 
 
 
