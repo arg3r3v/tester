@@ -115,20 +115,20 @@ window.addEventListener('load', () => {
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    function getNavmeshHeight(testPosition) {
+    // devuelve el primer intersect o null
+    function getNavmeshIntersection(testPosition) {
       if (!navMeshEl || !navMeshEl.object3D) return null;
-
       const origin = testPosition.clone();
       origin.y += 5;
-
       raycaster.set(origin, downVector);
-      const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+      const hits = raycaster.intersectObject(navMeshEl.object3D, true);
+      return hits.length > 0 ? hits[0] : null;
+    }
 
-      if (intersects.length > 0) {
-        return intersects[0].point.y;
-      }
-
-      return null;
+    // devuelve la altura (y) sobre el navmesh o null
+    function getNavmeshHeight(testPosition) {
+      const hit = getNavmeshIntersection(testPosition);
+      return hit ? hit.point.y : null;
     }
 
     /* TECLADO */
@@ -215,71 +215,73 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(right, -input.x);
 
         const currentPosition = rig.object3D.position.clone();
-const fullMove = moveVector.clone().multiplyScalar(speed * delta);
+        const fullMove = moveVector.clone().multiplyScalar(speed * delta);
 
-let moved = false;
+        let moved = false;
 
-/* Intento completo */
-let proposed = currentPosition.clone().add(fullMove);
-let height = getNavmeshHeight(proposed);
+        // 1) Intento completo
+        let proposed = currentPosition.clone().add(fullMove);
+        let height = getNavmeshHeight(proposed);
 
-if (height !== null) {
-  rig.object3D.position.copy(proposed);
-  rig.object3D.position.y = height;
-  moved = true;
-}
-
-/* Si falla, reducir movimiento progresivamente */
-if (!moved) {
-
-  const steps = 5; // entre más alto, más suave el deslizamiento
-
-  for (let i = steps; i > 0; i--) {
-
-    const factor = i / steps;
-    const testMove = fullMove.clone().multiplyScalar(factor);
-
-    proposed = currentPosition.clone().add(testMove);
-    height = getNavmeshHeight(proposed);
-
-    if (height !== null) {
-      rig.object3D.position.copy(proposed);
-      rig.object3D.position.y = height;
-      break;
-    }
-  }
-}
-
-        /* INTENTO 1: movimiento completo */
         if (height !== null) {
-
           rig.object3D.position.copy(proposed);
           rig.object3D.position.y = height;
+          moved = true;
+        }
 
-        } else {
-
-          /* INTENTO 2: solo X */
-          proposed = currentPosition.clone();
-          proposed.x += fullMove.x;
-
-          height = getNavmeshHeight(proposed);
-
-          if (height !== null) {
-
-            rig.object3D.position.copy(proposed);
-            rig.object3D.position.y = height;
-
-          } else {
-
-            /* INTENTO 3: solo Z */
-            proposed = currentPosition.clone();
-            proposed.z += fullMove.z;
-
+        // 2) Si no, reducción progresiva (deslizamiento suave)
+        if (!moved) {
+          const steps = 6; // puedes ajustar (6 es suficientemente suave)
+          for (let i = steps; i > 0; i--) {
+            const factor = i / steps;
+            const testMove = fullMove.clone().multiplyScalar(factor);
+            proposed = currentPosition.clone().add(testMove);
             height = getNavmeshHeight(proposed);
-
             if (height !== null) {
               rig.object3D.position.copy(proposed);
               rig.object3D.position.y = height;
+              moved = true;
+              break;
+            }
+          }
+        }
+
+        // 3) Si sigue sin moverse, intentar deslizar proyectando sobre la cara del navmesh
+        if (!moved) {
+          // obtener intersección bajo la posición actual (cara en la que estamos)
+          const currentHit = getNavmeshIntersection(currentPosition);
+          if (currentHit && currentHit.face) {
+            // normal en world space
+            const normalMatrix = new THREE.Matrix3().getNormalMatrix(navMeshEl.object3D.matrixWorld);
+            const faceNormal = currentHit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+
+            // proyectar fullMove sobre el plano de la cara (slide vector)
+            const slideVec = fullMove.clone().projectOnPlane(faceNormal);
+
+            // si el slideVec es prácticamente nulo, no hay nada que hacer
+            if (slideVec.length() > 0.0001) {
+              // probar slide completo y con reducción progresiva
+              proposed = currentPosition.clone().add(slideVec);
+              height = getNavmeshHeight(proposed);
+              if (height !== null) {
+                rig.object3D.position.copy(proposed);
+                rig.object3D.position.y = height;
+                moved = true;
+              } else {
+                const steps = 6;
+                for (let i = steps; i > 0; i--) {
+                  const factor = i / steps;
+                  const testMove = slideVec.clone().multiplyScalar(factor);
+                  proposed = currentPosition.clone().add(testMove);
+                  height = getNavmeshHeight(proposed);
+                  if (height !== null) {
+                    rig.object3D.position.copy(proposed);
+                    rig.object3D.position.y = height;
+                    moved = true;
+                    break;
+                  }
+                }
+              }
             }
           }
         }
@@ -307,10 +309,8 @@ if (!moved) {
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
-
         look.yawObject.rotation.y -= lookInput.x * rotSpeed * delta;
         look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
-
         const maxPitch = Math.PI / 2 - 0.1;
         look.pitchObject.rotation.x = Math.max(
           -maxPitch,
@@ -326,8 +326,9 @@ if (!moved) {
   });
 });
 </script>
-
+  
 </body>
 </html>
+
 
 
