@@ -215,10 +215,40 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(right, -input.x);
 
         const currentPosition = rig.object3D.position.clone();
-        const fullMove = moveVector.clone().multiplyScalar(speed * delta);
+const fullMove = moveVector.clone().multiplyScalar(speed * delta);
 
-        let proposed = currentPosition.clone().add(fullMove);
-        let height = getNavmeshHeight(proposed);
+let moved = false;
+
+/* Intento completo */
+let proposed = currentPosition.clone().add(fullMove);
+let height = getNavmeshHeight(proposed);
+
+if (height !== null) {
+  rig.object3D.position.copy(proposed);
+  rig.object3D.position.y = height;
+  moved = true;
+}
+
+/* Si falla, reducir movimiento progresivamente */
+if (!moved) {
+
+  const steps = 5; // entre más alto, más suave el deslizamiento
+
+  for (let i = steps; i > 0; i--) {
+
+    const factor = i / steps;
+    const testMove = fullMove.clone().multiplyScalar(factor);
+
+    proposed = currentPosition.clone().add(testMove);
+    height = getNavmeshHeight(proposed);
+
+    if (height !== null) {
+      rig.object3D.position.copy(proposed);
+      rig.object3D.position.y = height;
+      break;
+    }
+  }
+}
 
         /* INTENTO 1: movimiento completo */
         if (height !== null) {
@@ -299,4 +329,5 @@ window.addEventListener('load', () => {
 
 </body>
 </html>
+
 
