@@ -204,8 +204,9 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-       /*MOVIMIENTO CON DESLIZAMIENTO*/
-const subSteps = 12; // puedes subir a 10 o 12 si quieres más suavidad
+/*MOVIMIENTO CON DESLIZAMIENTO AVANZADO*/
+const subSteps = 8;
+const cornerFriction = 0.5; // reduce fuerza cuando está atrapado
 
 const totalMove = moveVector.clone().multiplyScalar(speed * delta);
 const stepMove = totalMove.clone().divideScalar(subSteps);
@@ -216,7 +217,7 @@ for (let i = 0; i < subSteps; i++) {
 
   let moved = false;
 
-  // Intento completo
+  // ===== INTENTO COMPLETO =====
   let testFull = currentPosition.clone().add(stepMove);
   let origin = testFull.clone();
   origin.y += 5;
@@ -232,46 +233,41 @@ for (let i = 0; i < subSteps; i++) {
     moved = true;
   }
 
+  // ===== INTENTOS POR EJE =====
   if (!moved) {
 
-    // Intento eje X
-    let testX = currentPosition.clone();
-    testX.x += stepMove.x;
+    const tryAxis = (axis, amount) => {
+      let reduced = amount;
+      for (let r = 0; r < 3; r++) { // intentos progresivos
+        let test = currentPosition.clone();
+        test[axis] += reduced;
 
-    origin = testX.clone();
-    origin.y += 5;
+        let o = test.clone();
+        o.y += 5;
 
-    raycaster.set(origin, downVector);
-    intersects = navMeshEl.object3D
-      ? raycaster.intersectObject(navMeshEl.object3D, true)
-      : [];
+        raycaster.set(o, downVector);
+        let hits = navMeshEl.object3D
+          ? raycaster.intersectObject(navMeshEl.object3D, true)
+          : [];
 
-    if (intersects.length > 0) {
-      currentPosition.x = testX.x;
-      currentPosition.y = intersects[0].point.y;
-      moved = true;
-    }
+        if (hits.length > 0) {
+          currentPosition[axis] = test[axis];
+          currentPosition.y = hits[0].point.y;
+          return true;
+        }
 
-    // Intento eje Z
-    let testZ = currentPosition.clone();
-    testZ.z += stepMove.z;
+        reduced *= cornerFriction; // reduce movimiento
+      }
+      return false;
+    };
 
-    origin = testZ.clone();
-    origin.y += 5;
+    const movedX = tryAxis("x", stepMove.x);
+    const movedZ = tryAxis("z", stepMove.z);
 
-    raycaster.set(origin, downVector);
-    intersects = navMeshEl.object3D
-      ? raycaster.intersectObject(navMeshEl.object3D, true)
-      : [];
-
-    if (intersects.length > 0) {
-      currentPosition.z = testZ.z;
-      currentPosition.y = intersects[0].point.y;
-      moved = true;
-    }
+    moved = movedX || movedZ;
   }
 
-  // si no se movió en ningún eje, simplemente se queda en el borde
+  // si no se movió nada, simplemente se queda en el borde
 }
 
 rig.object3D.position.copy(currentPosition);
@@ -334,6 +330,7 @@ rig.object3D.position.copy(currentPosition);
   
 </body>
 </html>
+
 
 
 
