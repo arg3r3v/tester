@@ -131,6 +131,57 @@ window.addEventListener('load', () => {
       return hit ? hit.point.y : null;
     }
 
+    // obtiene la normal de la cara del hit en world space (robusto para BufferGeometry)
+    function getFaceNormalFromHit(hit) {
+      if (!hit) return null;
+      // si face.normal ya existe, usarla (y transformarla)
+      if (hit.face && hit.face.normal && hit.object && hit.object.matrixWorld) {
+        const n = hit.face.normal.clone();
+        const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
+        n.applyMatrix3(normalMatrix).normalize();
+        return n;
+      }
+      // intentar reconstruir desde geometry usando faceIndex
+      const mesh = hit.object;
+      const geom = mesh.geometry;
+      if (!geom) return null;
+      const posAttr = geom.attributes.position;
+      if (!posAttr) return null;
+
+      let aIndex, bIndex, cIndex;
+
+      if (geom.index) {
+        // index exists: faceIndex -> three indices at 3*faceIndex..3*faceIndex+2
+        const i = hit.faceIndex * 3;
+        // note: BufferAttribute .getX(i) returns integer index stored in index buffer
+        aIndex = geom.index.getX(i);
+        bIndex = geom.index.getX(i + 1);
+        cIndex = geom.index.getX(i + 2);
+      } else {
+        // non-indexed: vertices are sequential: vertex = faceIndex*3 + offset
+        const base = hit.faceIndex * 3;
+        aIndex = base;
+        bIndex = base + 1;
+        cIndex = base + 2;
+      }
+
+      // read vertex positions in local space
+      const vA = new THREE.Vector3().fromBufferAttribute(posAttr, aIndex);
+      const vB = new THREE.Vector3().fromBufferAttribute(posAttr, bIndex);
+      const vC = new THREE.Vector3().fromBufferAttribute(posAttr, cIndex);
+
+      // transform to world space
+      vA.applyMatrix4(mesh.matrixWorld);
+      vB.applyMatrix4(mesh.matrixWorld);
+      vC.applyMatrix4(mesh.matrixWorld);
+
+      // compute normal
+      const cb = new THREE.Vector3().subVectors(vC, vB);
+      const ab = new THREE.Vector3().subVectors(vA, vB);
+      const normal = new THREE.Vector3().crossVectors(cb, ab).normalize();
+      return normal.length() > 0 ? normal : null;
+    }
+
     /* TECLADO */
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
@@ -231,7 +282,7 @@ window.addEventListener('load', () => {
 
         // 2) Si no, reducción progresiva (deslizamiento suave)
         if (!moved) {
-          const steps = 6; // puedes ajustar (6 es suficientemente suave)
+          const steps = 6;
           for (let i = steps; i > 0; i--) {
             const factor = i / steps;
             const testMove = fullMove.clone().multiplyScalar(factor);
@@ -248,19 +299,15 @@ window.addEventListener('load', () => {
 
         // 3) Si sigue sin moverse, intentar deslizar proyectando sobre la cara del navmesh
         if (!moved) {
-          // obtener intersección bajo la posición actual (cara en la que estamos)
           const currentHit = getNavmeshIntersection(currentPosition);
-          if (currentHit && currentHit.face) {
-            // normal en world space
-            const normalMatrix = new THREE.Matrix3().getNormalMatrix(navMeshEl.object3D.matrixWorld);
-            const faceNormal = currentHit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+          const faceNormal = currentHit ? getFaceNormalFromHit(currentHit) : null;
 
-            // proyectar fullMove sobre el plano de la cara (slide vector)
+          if (faceNormal) {
+            // projección del movimiento completo sobre el plano de la cara
             const slideVec = fullMove.clone().projectOnPlane(faceNormal);
 
-            // si el slideVec es prácticamente nulo, no hay nada que hacer
             if (slideVec.length() > 0.0001) {
-              // probar slide completo y con reducción progresiva
+              // intentar slide completo
               proposed = currentPosition.clone().add(slideVec);
               height = getNavmeshHeight(proposed);
               if (height !== null) {
@@ -268,6 +315,7 @@ window.addEventListener('load', () => {
                 rig.object3D.position.y = height;
                 moved = true;
               } else {
+                // reducción progresiva sobre slide
                 const steps = 6;
                 for (let i = steps; i > 0; i--) {
                   const factor = i / steps;
@@ -329,6 +377,7 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
 
 
 
