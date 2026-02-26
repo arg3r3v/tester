@@ -109,17 +109,33 @@ window.addEventListener('load', () => {
 
     const raycaster = new THREE.Raycaster();
     const downVector = new THREE.Vector3(0, -1, 0);
-    
+
     function angleDifference(a, b) {
       let diff = b - a;
       return Math.atan2(Math.sin(diff), Math.cos(diff));
     }
 
-    /*TECLADO*/
+    function getNavmeshHeight(testPosition) {
+      if (!navMeshEl || !navMeshEl.object3D) return null;
+
+      const origin = testPosition.clone();
+      origin.y += 5;
+
+      raycaster.set(origin, downVector);
+      const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+
+      if (intersects.length > 0) {
+        return intersects[0].point.y;
+      }
+
+      return null;
+    }
+
+    /* TECLADO */
     window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
     window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-    /*DOS NIPPLES (solo touch)*/
+    /* DOS NIPPLES */
     const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isTouch) {
@@ -130,7 +146,6 @@ window.addEventListener('load', () => {
       leftZone.style.display = 'block';
       rightZone.style.display = 'block';
 
-      /*IZQUIERDO - MOVIMIENTO*/
       const moveJoy = nipplejs.create({
         zone: leftZone,
         mode: 'static',
@@ -144,11 +159,8 @@ window.addEventListener('load', () => {
         nippleVector.set(data.vector.x, data.vector.y);
       });
 
-      moveJoy.on('end', () => {
-        nippleVector.set(0, 0);
-      });
+      moveJoy.on('end', () => nippleVector.set(0, 0));
 
-      /*DERECHO - ROTACIÓN*/
       const lookJoy = nipplejs.create({
         zone: rightZone,
         mode: 'static',
@@ -162,17 +174,15 @@ window.addEventListener('load', () => {
         lookInput.set(data.vector.x, data.vector.y);
       });
 
-      lookJoy.on('end', () => {
-        lookInput.set(0, 0);
-      });
+      lookJoy.on('end', () => lookInput.set(0, 0));
     }
 
-    /*ANIMACION*/
+    /* ANIMACION */
     player.addEventListener('model-loaded', () => {
       player.components['animation-mixer']?.pause();
     });
 
-    /*CONTROLES*/
+    /* LOOP */
     function tick() {
       const now = performance.now();
       const delta = (now - lastTime) / 1000;
@@ -204,31 +214,51 @@ window.addEventListener('load', () => {
         moveVector.addScaledVector(forward, input.y);
         moveVector.addScaledVector(right, -input.x);
 
-        const proposedPosition = rig.object3D.position.clone();
-proposedPosition.addScaledVector(moveVector, speed * delta);
+        const currentPosition = rig.object3D.position.clone();
+        const fullMove = moveVector.clone().multiplyScalar(speed * delta);
 
-/*VALIDAR CONTRA NAVMESH*/
-if (navMeshEl && navMeshEl.object3D) {
+        let proposed = currentPosition.clone().add(fullMove);
+        let height = getNavmeshHeight(proposed);
 
-  const origin = proposedPosition.clone();
-  origin.y += 5;
+        /* INTENTO 1: movimiento completo */
+        if (height !== null) {
 
-  raycaster.set(origin, downVector);
-  const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+          rig.object3D.position.copy(proposed);
+          rig.object3D.position.y = height;
 
-  if (intersects.length > 0) {
-    rig.object3D.position.copy(proposedPosition);
-    rig.object3D.position.y = intersects[0].point.y;
-  }
+        } else {
 
-}
+          /* INTENTO 2: solo X */
+          proposed = currentPosition.clone();
+          proposed.x += fullMove.x;
 
+          height = getNavmeshHeight(proposed);
+
+          if (height !== null) {
+
+            rig.object3D.position.copy(proposed);
+            rig.object3D.position.y = height;
+
+          } else {
+
+            /* INTENTO 3: solo Z */
+            proposed = currentPosition.clone();
+            proposed.z += fullMove.z;
+
+            height = getNavmeshHeight(proposed);
+
+            if (height !== null) {
+              rig.object3D.position.copy(proposed);
+              rig.object3D.position.y = height;
+            }
+          }
+        }
+
+        /* ROTACION PERSONAJE */
         const moveAngle = Math.atan2(moveVector.x, moveVector.z);
         const targetRotation = moveAngle + Math.PI;
-
         const currentRotation = player.object3D.rotation.y;
         const diff = angleDifference(currentRotation, targetRotation);
-
         player.object3D.rotation.y += diff * rotationSmooth;
 
         if (!moving) {
@@ -243,19 +273,7 @@ if (navMeshEl && navMeshEl.object3D) {
         }
       }
 
-      if (navMeshEl && navMeshEl.object3D) {
-        const origin = rig.object3D.position.clone();
-        origin.y += 5;
-
-        raycaster.set(origin, downVector);
-        const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
-
-        if (intersects.length > 0) {
-          rig.object3D.position.y = intersects[0].point.y;
-        }
-      }
-      
-      /*ROTACIÓN NIPPLE*/
+      /* ROTACIÓN CÁMARA */
       const look = cameraYaw.components['look-controls'];
       if (look) {
         const rotSpeed = 1.5;
@@ -281,3 +299,4 @@ if (navMeshEl && navMeshEl.object3D) {
 
 </body>
 </html>
+
