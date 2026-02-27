@@ -60,6 +60,17 @@
     <a-entity gltf-model="#ramas" position="0 0 0"></a-entity>
     <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
 
+    <!-- LUCIERNAGA -->
+
+      <a-entity gltf-model="#luciernaga" id="luciernaga" position="2 1.5 -2" animation-mixer="clip: *; loop: repeat">
+        <a-entity
+          id="luciernagaTrigger"
+          geometry="primitive: box; width: 0.5; height: 2; depth: 1"
+          material="opacity: 0; transparent: true"
+          position="0 0 0">
+        </a-entity>
+      </a-entity>
+
     <!-- salida -->
     <a-entity gltf-model="#salida" id="salida" position="9 0 1.2">
       <a-entity
@@ -77,17 +88,6 @@
       <a-entity id="player"
                 gltf-model="#tlacuache"
                 animation-mixer="clip: walk; loop: repeat">
-      </a-entity>
-
-      <!-- LUCIERNAGA -->
-
-      <a-entity gltf-model="#luciernaga" id="luciernaga" position="2 1.5 -2" animation-mixer="clip: *; loop: repeat">
-        <a-entity
-          id="luciernagaTrigger"
-          geometry="primitive: box; width: 0.5; height: 2; depth: 1"
-          material="opacity: 0; transparent: true"
-          position="0 0 0">
-        </a-entity>
       </a-entity>
       
       <!-- CÁMARA -->
@@ -361,3 +361,4 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
