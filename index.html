@@ -9,6 +9,34 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 
   <style>
+
+  #lucyPopup {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 220px;
+    max-width: 60%;
+    padding: 12px 16px;
+    background: rgba(10,10,10,0.85);
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 14px;
+    border-radius: 8px;
+    text-align: center;
+    z-index: 10000;
+    display: none;
+    pointer-events: none;
+  }
+  #lucyPopup.show {
+    display: block;
+    animation: popupIn 180ms ease;
+  }
+  @keyframes popupIn {
+    from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+    
     /* Zona joystick*/
   #joyLeft, #joyRight {
   position: absolute;
@@ -361,5 +389,6 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
+
 
 
