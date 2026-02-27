@@ -59,9 +59,26 @@ html,body { height:100%; margin:0; }
   pointer-events: none;
   z-index: 9999;
 
-  box-shadow:
-  inset 0 0 12vmax rgba(178, 178, 178, 0.45),
-  inset 0 0 20vmax rgba(178, 178, 178, 0.2);
+  background:
+    radial-gradient(circle at top left,
+      rgba(178,178,178,0.6) 0%,
+      rgba(178,178,178,0.3) 20%,
+      transparent 45%),
+
+    radial-gradient(circle at top right,
+      rgba(178,178,178,0.6) 0%,
+      rgba(178,178,178,0.3) 20%,
+      transparent 45%),
+
+    radial-gradient(circle at bottom left,
+      rgba(178,178,178,0.6) 0%,
+      rgba(178,178,178,0.3) 20%,
+      transparent 45%),
+
+    radial-gradient(circle at bottom right,
+      rgba(178,178,178,0.6) 0%,
+      rgba(178,178,178,0.3) 20%,
+      transparent 45%);
 }
     
   </style>
@@ -442,5 +459,3 @@ luciernagas.forEach(luc => {
 <div id="magicFrame"></div>
   
 </html>
-
-
