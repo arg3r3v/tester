@@ -46,6 +46,7 @@
       <a-asset-item id="tlacuache" src="assets/tlacuache.glb"></a-asset-item>
       <a-asset-item id="navmesh" src="assets/navmesh.glb"></a-asset-item>
       <a-asset-item id="salida" src="assets/salida.glb"></a-asset-item>
+      <a-asset-item id="luciernaga" src="assets/luciernaga.glb"></a-asset-item>
     </a-assets>
 
   <a-entity
@@ -60,14 +61,14 @@
     <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
 
     <!-- salida -->
-<a-entity gltf-model="#salida" id="salida" position="9 0 1.2">
-  <a-entity
-    id="salidaTrigger"
-    geometry="primitive: box; width: 0.5; height: 2; depth: 1"
-    material="opacity: 0; transparent: true"
-    position="0 1 0">
-  </a-entity>
-</a-entity>
+    <a-entity gltf-model="#salida" id="salida" position="9 0 1.2">
+      <a-entity
+        id="salidaTrigger"
+        geometry="primitive: box; width: 0.5; height: 2; depth: 1"
+        material="opacity: 0; transparent: true"
+        position="0 1 0">
+      </a-entity>
+    </a-entity>
 
     <!-- RIG -->
     <a-entity id="rig" position="0 0 0">
@@ -78,6 +79,17 @@
                 animation-mixer="clip: walk; loop: repeat">
       </a-entity>
 
+      <!-- LUCIERNAGA -->
+
+      <a-entity gltf-model="#luciernaga" id="luciernaga" position="2 1.5 -2" animation-mixer="clip: *; loop: repeat">
+        <a-entity
+          id="luciernagaTrigger"
+          geometry="primitive: box; width: 0.5; height: 2; depth: 1"
+          material="opacity: 0; transparent: true"
+          position="0 0 0">
+        </a-entity>
+      </a-entity>
+      
       <!-- CÁMARA -->
       <a-entity id="cameraPivot" position="0 1.5 0">
         <a-entity id="cameraYaw" look-controls="pointerLockEnabled: false">
@@ -349,23 +361,3 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
