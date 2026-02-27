@@ -90,7 +90,7 @@
 
     <!-- LUCIERNAGA -->
 
-      <a-entity gltf-model="#luciernaga" id="luciernaga" position="2 1 0" animation-mixer="clip: *; loop: repeat">
+      <a-entity gltf-model="#luciernaga" id="luciernaga" position="2 1 0" animation-mixer="clip: *; loop: repeat" data-message="No todas las luces quieren ser vistas.">
         <a-entity
           id="luciernagaTrigger"
           geometry="primitive: box; width: 0.5; height: 2; depth: 1"
@@ -148,11 +148,11 @@ window.addEventListener('load', () => {
     const exitDistance = 1.5;
     let alreadyTriggered = false;
 
-      const luciernagas = document.querySelectorAll('.luciernaga');
-      const lucPopup = document.getElementById('lucyPopup');
-      
-      const lucDistance = 1.5;
-      const lucState = new Map();
+      // Variables para múltiples luciérnagas (compatibles con clases o ids)
+const luciernagas = document.querySelectorAll('.luciernaga, #luciernaga');
+const lucPopup = document.getElementById('lucyPopup');
+const lucDistance = 1.5;
+const lucState = new Map();
 
     if (!rig || !player || !camera) {
       console.warn('Faltan elementos rig/player/camera');
@@ -367,13 +367,13 @@ window.addEventListener('load', () => {
       }
 
       /* ===== DETECCIÓN LUCÉRNAGA ===== */
-
 luciernagas.forEach(luc => {
 
-  const trigger = luc.querySelector('.luciernagaTrigger');
+  // buscar trigger hijo (soporta tanto class como id)
+  const trigger = luc.querySelector('.luciernagaTrigger, #luciernagaTrigger');
   if (!trigger) return;
 
-  const playerPos = rig.object3D.position.clone();
+  const playerPos = rig.object3D.position;
   const triggerPos = new THREE.Vector3();
   trigger.object3D.getWorldPosition(triggerPos);
 
@@ -383,14 +383,15 @@ luciernagas.forEach(luc => {
   if (distance < lucDistance && !wasInside) {
     lucState.set(luc, true);
 
-    // Aquí cambiamos el texto dinámicamente
-    lucyPopup.innerText = luc.dataset.message;
-    lucyPopup.style.display = "block";
+    // mensaje dinámico desde data-message
+    const msg = luc.dataset && luc.dataset.message ? luc.dataset.message : 'Una luciérnaga...';
+    lucPopup.innerText = msg;
+    lucPopup.classList.add('show');    // usa la clase .show para animación
   }
 
   if (distance >= lucDistance && wasInside) {
     lucState.set(luc, false);
-    lucyPopup.style.display = "none";
+    lucPopup.classList.remove('show');
   }
 
 });
@@ -426,3 +427,4 @@ luciernagas.forEach(luc => {
   
 </body>
 </html>
+
