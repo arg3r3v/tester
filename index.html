@@ -131,6 +131,8 @@
 
   </a-scene>
 
+  <div id="lucyPopup"></div>
+
 <script>
 window.addEventListener('load', () => {
   const scene = document.querySelector('a-scene');
@@ -146,11 +148,11 @@ window.addEventListener('load', () => {
     const exitDistance = 1.5;
     let alreadyTriggered = false;
 
-    const lucTrigger = document.querySelector('#luciernagaTrigger');
-    const lucPopup = document.getElementById('lucyPopup');
-
-    const lucDistance = 1.5;
-    let lucTriggered = false;
+      const luciernagas = document.querySelectorAll('.luciernaga');
+      const lucPopup = document.getElementById('lucyPopup');
+      
+      const lucDistance = 1.5;
+      const lucState = new Map();
 
     if (!rig || !player || !camera) {
       console.warn('Faltan elementos rig/player/camera');
@@ -365,24 +367,33 @@ window.addEventListener('load', () => {
       }
 
       /* ===== DETECCIÓN LUCÉRNAGA ===== */
-      if (lucTrigger) {
-      
-        const playerPos = rig.object3D.position.clone();
-        const triggerPos = new THREE.Vector3();
-        lucTrigger.object3D.getWorldPosition(triggerPos);
-      
-        const distance = playerPos.distanceTo(triggerPos);
-      
-        if (distance < lucDistance && !lucTriggered) {
-          lucTriggered = true;
-          lucPopup.style.display = "block";
-        }
-      
-        if (distance >= lucDistance && lucTriggered) {
-          lucTriggered = false;
-          lucPopup.style.display = "none";
-        }
-      }
+
+luciernagas.forEach(luc => {
+
+  const trigger = luc.querySelector('.luciernagaTrigger');
+  if (!trigger) return;
+
+  const playerPos = rig.object3D.position.clone();
+  const triggerPos = new THREE.Vector3();
+  trigger.object3D.getWorldPosition(triggerPos);
+
+  const distance = playerPos.distanceTo(triggerPos);
+  const wasInside = lucState.get(luc) || false;
+
+  if (distance < lucDistance && !wasInside) {
+    lucState.set(luc, true);
+
+    // Aquí cambiamos el texto dinámicamente
+    lucyPopup.innerText = luc.dataset.message;
+    lucyPopup.style.display = "block";
+  }
+
+  if (distance >= lucDistance && wasInside) {
+    lucState.set(luc, false);
+    lucyPopup.style.display = "none";
+  }
+
+});
       
       /* ===== DETECCIÓN DE SALIDA CON TRIGGER ===== */
       if (salidaTrigger && !alreadyTriggered) {
@@ -415,10 +426,3 @@ window.addEventListener('load', () => {
   
 </body>
 </html>
-
-
-
-
-
-
-
