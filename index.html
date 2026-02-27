@@ -53,8 +53,24 @@
     
 html,body { height:100%; margin:0; }
 
-#magicFrame { position: fixed; inset: 0; pointer-events: none; z-index: 9999;
-             box-shadow: inset 0 0 12vmax rgba(178, 178, 178, 0.45), inset 0 0 20vmax rgba(178, 178, 178, 0.2); }
+#magicFrame {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+
+  background: rgba(178, 178, 178, 0.5);
+
+  /* Grosor del marco */
+  padding: 6vmin;
+
+  /* Esto crea el “hueco” del centro */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
     
   </style>
 </head>
@@ -434,6 +450,7 @@ luciernagas.forEach(luc => {
 <div id="magicFrame"></div>
   
 </html>
+
 
 
 
