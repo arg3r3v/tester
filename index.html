@@ -6,6 +6,10 @@
 <title>Portafolio Web</title>
 <meta name="facebook-domain-verification" content="gfh4qw4wnhy99uwo0i1xo8lrn4e9h9" />
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
 <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
@@ -26,6 +30,13 @@ font-display: swap;
 --header-shadow: rgba(0, 0, 0, 0.52);
 }
 
+html,
+body {
+height: 100%;
+margin: 0;
+font-family: "Roboto", Arial, sans-serif;
+}
+
 #lucyPopup {
 position: absolute;
 top: 18%;
@@ -36,7 +47,7 @@ max-width: 60%;
 padding: 12px 16px;
 background: rgba(10,10,10,0.85);
 color: #fff;
-font-family: sans-serif;
+font-family: "Roboto", Arial, sans-serif;
 font-size: 14px;
 border-radius: 8px;
 text-align: center;
@@ -130,9 +141,9 @@ pointer-events: auto;
 position: relative;
 padding: 10px 0;
 color: var(--header-text);
-font-family: Arial, sans-serif;
+font-family: "Roboto", Arial, sans-serif;
 font-size: clamp(0.78rem, 1.05vw, 0.95rem);
-font-weight: 600;
+font-weight: 500;
 letter-spacing: 0.035em;
 line-height: 1;
 text-decoration: none;
@@ -177,7 +188,7 @@ padding: 0;
 border: 0;
 background: transparent;
 color: var(--header-text);
-font-family: Arial, sans-serif;
+font-family: "Roboto", Arial, sans-serif;
 font-size: 1.7rem;
 line-height: 1;
 text-shadow: 0 2px 10px var(--header-shadow);
@@ -222,12 +233,6 @@ left: 20px;
 
 #joyRight {
 right: 20px;
-}
-
-html,
-body {
-height: 100%;
-margin: 0;
 }
 
 #magicFrame {
