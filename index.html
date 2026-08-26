@@ -2,15 +2,24 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portafolio Web</title>
 <meta name="facebook-domain-verification" content="gfh4qw4wnhy99uwo0i1xo8lrn4e9h9" />
-
 <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
-
 <style>
-
+@font-face {
+font-family: "Jingleberry";
+src:
+url("assets/Jingleberry.woff2") format("woff2"),
+url("assets/Jingleberry.woff") format("woff"),
+url("assets/Jingleberry.ttf") format("truetype");
+font-display: swap;
+}
+:root {
+--header-height: 76px;
+}
 #lucyPopup {
 position: absolute;
 top: 18%;
@@ -37,8 +46,123 @@ animation: popupIn 180ms ease;
 from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
 to { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
-
-/* Zona joystick*/
+/* Header */
+.site-header {
+position: fixed;
+top: 0;
+right: 0;
+left: 0;
+z-index: 10001;
+height: var(--header-height);
+box-sizing: border-box;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 28px;
+padding:
+env(safe-area-inset-top)
+clamp(20px, 4vw, 64px)
+0;
+background:
+linear-gradient(180deg, rgba(178,178,178,0.9) 0%, rgba(178,178,178,0.58) 72%, rgba(178,178,178,0) 100%);
+border-bottom: 1px solid rgba(255,255,255,0.32);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+pointer-events: none;
+}
+.site-brand {
+color: #171717;
+font-family: "Jingleberry", sans-serif;
+font-size: clamp(1.3rem, 3vw, 2.15rem);
+font-weight: normal;
+line-height: 1;
+letter-spacing: 0.035em;
+text-decoration: none;
+white-space: nowrap;
+text-shadow: 1px 1px 0 rgba(255,255,255,0.35);
+pointer-events: auto;
+transition: opacity 180ms ease, transform 180ms ease;
+}
+.site-brand:hover,
+.site-brand:focus-visible {
+opacity: 0.7;
+transform: translateY(-1px);
+}
+.site-nav {
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: clamp(16px, 2.5vw, 36px);
+pointer-events: auto;
+}
+.site-nav a {
+position: relative;
+color: #171717;
+font-family: Arial, sans-serif;
+font-size: 0.78rem;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-decoration: none;
+text-transform: uppercase;
+white-space: nowrap;
+transition: color 180ms ease;
+}
+.site-nav a::after {
+content: "";
+position: absolute;
+right: 0;
+bottom: -7px;
+left: 0;
+height: 1px;
+background: currentColor;
+transform: scaleX(0);
+transform-origin: right;
+transition: transform 180ms ease;
+}
+.site-nav a:hover,
+.site-nav a:focus-visible {
+color: rgba(23,23,23,0.58);
+}
+.site-nav a:hover::after,
+.site-nav a:focus-visible::after {
+transform: scaleX(1);
+transform-origin: left;
+}
+.menu-toggle {
+display: none;
+place-items: center;
+width: 46px;
+height: 46px;
+padding: 0;
+border: 1px solid rgba(23,23,23,0.45);
+border-radius: 50%;
+background: rgba(255,255,255,0.2);
+color: #171717;
+font-family: Arial, sans-serif;
+font-size: 1.45rem;
+line-height: 1;
+cursor: pointer;
+pointer-events: auto;
+touch-action: manipulation;
+transition: background 180ms ease, transform 180ms ease;
+}
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+background: rgba(255,255,255,0.56);
+transform: scale(1.04);
+}
+.sr-only {
+position: absolute;
+width: 1px;
+height: 1px;
+padding: 0;
+margin: -1px;
+overflow: hidden;
+clip: rect(0, 0, 0, 0);
+white-space: nowrap;
+border: 0;
+}
+/* Zona joystick */
 #joyLeft, #joyRight {
 position: absolute;
 bottom: 20px;
@@ -48,42 +172,126 @@ touch-action: none;
 display: none;
 z-index: 9999;
 }
-
 #joyLeft { left: 20px; }
 #joyRight { right: 20px; }
-
 html,body { height:100%; margin:0; }
-
 #magicFrame {
 position: fixed;
 inset: 0;
 pointer-events: none;
 z-index: 9999;
 background: transparent;
-
 box-shadow:
 inset 0 0 8vmin rgba(178,178,178,0.8),
 inset 0 0 14vmin rgba(178,178,178,0.6),
 inset 0 0 20vmin rgba(178,178,178,0.35),
 inset 0 0 26vmin rgba(178,178,178,0.15);
-
 filter: blur(2px);
 }
-
+@media (max-width: 767px), (max-height: 500px) and (orientation: landscape) {
+:root {
+--header-height: 64px;
+}
+.site-header {
+gap: 16px;
+padding-right: max(16px, env(safe-area-inset-right));
+padding-left: max(16px, env(safe-area-inset-left));
+}
+.site-brand {
+font-size: clamp(1.15rem, 7.4vw, 1.65rem);
+overflow: hidden;
+text-overflow: clip;
+}
+.menu-toggle {
+display: grid;
+flex: 0 0 auto;
+}
+.site-nav {
+position: fixed;
+top: calc(var(--header-height) + env(safe-area-inset-top));
+right: max(12px, env(safe-area-inset-right));
+display: grid;
+grid-template-columns: 1fr;
+align-items: stretch;
+justify-content: stretch;
+gap: 0;
+width: min(320px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+max-height: calc(100dvh - var(--header-height) - env(safe-area-inset-top) - 24px);
+padding: 8px;
+overflow-y: auto;
+background: rgba(205,205,205,0.94);
+border: 1px solid rgba(23,23,23,0.28);
+border-radius: 18px;
+box-shadow: 0 18px 42px rgba(0,0,0,0.2);
+backdrop-filter: blur(14px);
+-webkit-backdrop-filter: blur(14px);
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+transform: translateY(-10px) scale(0.98);
+transform-origin: top right;
+transition:
+opacity 170ms ease,
+transform 170ms ease,
+visibility 170ms step-end;
+}
+.site-nav.is-open {
+opacity: 1;
+visibility: visible;
+pointer-events: auto;
+transform: translateY(0) scale(1);
+transition:
+opacity 170ms ease,
+transform 170ms ease,
+visibility 0ms;
+}
+.site-nav a {
+display: flex;
+align-items: center;
+min-height: 48px;
+padding: 0 14px;
+border-radius: 11px;
+font-size: 0.82rem;
+}
+.site-nav a:hover,
+.site-nav a:focus-visible {
+background: rgba(255,255,255,0.46);
+color: #171717;
+}
+.site-nav a::after {
+display: none;
+}
+}
 </style>
 </head>
-
 <body style="margin:0; overflow:hidden;">
-
+<header class="site-header" id="siteHeader">
+<a class="site-brand" href="#inicio" aria-label="Chispero, ir a Inicio">CHISPERO</a>
+<button
+class="menu-toggle"
+id="menuToggle"
+type="button"
+aria-expanded="false"
+aria-controls="siteMenu"
+aria-label="Abrir menú">
+<span id="menuToggleIcon" aria-hidden="true">☰</span>
+<span class="sr-only">Menú de navegación</span>
+</button>
+<nav class="site-nav" id="siteMenu" aria-label="Navegación principal">
+<a href="#proyectos">Proyectos</a>
+<a href="#nosotros">Nosotros</a>
+<a href="#servicios">Servicios</a>
+<a href="#contacto">Contacto</a>
+</nav>
+</header>
 <!--Zona para joystick-->
 <div id="joyLeft"></div>
 <div id="joyRight"></div>
-
 <a-scene
+id="inicio"
 background="color: #B2B2B2"
 renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
 shadow="type: pcfsoft">
-
 <!-- Assets -->
 <a-assets>
 <a-asset-item id="tronco" src="assets/tronco.glb"></a-asset-item>
@@ -94,20 +302,16 @@ shadow="type: pcfsoft">
 <a-asset-item id="salida" src="assets/salida.glb"></a-asset-item>
 <a-asset-item id="luciernaga" src="assets/luciernaga.glb"></a-asset-item>
 </a-assets>
-
 <a-entity
 gltf-model="#navmesh"
 nav-mesh
 visible="false">
 </a-entity>
-
 <!-- Modelos -->
 <a-entity gltf-model="#tronco" position="0 0 0"></a-entity>
 <a-entity gltf-model="#ramas" position="0 0 0"></a-entity>
 <a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
-
 <!-- PLANOS / FOTOS -->
-
 <a-image
 src="assets/foto1.jpg"
 position="-3 1.5 -1"
@@ -115,7 +319,6 @@ width="1.6"
 height="2"
 rotation="0 35 0">
 </a-image>
-
 <a-image
 src="assets/foto2.jpg"
 position="-5 1.5 2"
@@ -123,7 +326,6 @@ width="1.6"
 height="2"
 rotation="0 70 0">
 </a-image>
-
 <a-image
 src="assets/foto3.jpg"
 position="-4 1.5 5"
@@ -131,7 +333,6 @@ width="1.6"
 height="2"
 rotation="0 145 0">
 </a-image>
-
 <a-image
 src="assets/foto4.jpg"
 position="0 1.5 6"
@@ -139,7 +340,6 @@ width="1.6"
 height="2"
 rotation="0 180 0">
 </a-image>
-
 <a-image
 src="assets/foto5.jpg"
 position="4 1.5 5"
@@ -147,7 +347,6 @@ width="1.6"
 height="2"
 rotation="0 215 0">
 </a-image>
-
 <a-image
 src="assets/foto6.jpg"
 position="6 1.5 2"
@@ -155,7 +354,6 @@ width="1.6"
 height="2"
 rotation="0 270 0">
 </a-image>
-
 <a-image
 src="assets/foto7.jpg"
 position="5 1.5 -2"
@@ -163,7 +361,6 @@ width="1.6"
 height="2"
 rotation="0 300 0">
 </a-image>
-
 <a-image
 src="assets/foto8.jpg"
 position="2 1.5 -4"
@@ -171,7 +368,6 @@ width="1.6"
 height="2"
 rotation="0 350 0">
 </a-image>
-
 <a-image
 src="assets/foto9.jpg"
 position="-2 1.5 -4"
@@ -179,7 +375,6 @@ width="1.6"
 height="2"
 rotation="0 20 0">
 </a-image>
-
 <a-image
 src="assets/foto10.jpg"
 position="-6 1.5 -3"
@@ -187,9 +382,7 @@ width="1.6"
 height="2"
 rotation="0 55 0">
 </a-image>
-
 <!-- LUCIERNAGA -->
-
 <a-entity class="luciernaga" gltf-model="#luciernaga"
 id="luciernaga1" position="2 1 0"
 animation-mixer="clip: *; loop: repeat">
@@ -200,7 +393,6 @@ material="opacity: 0; transparent: true"
 position="0 0 0">
 </a-entity>
 </a-entity>
-
 <!-- salida -->
 <a-entity gltf-model="#salida" id="salida" position="9 0 1.2">
 <a-entity
@@ -210,16 +402,13 @@ material="opacity: 0; transparent: true"
 position="0 1 0">
 </a-entity>
 </a-entity>
-
 <!-- RIG -->
 <a-entity id="rig" position="0 0 0">
-
 <!-- TLACUACHE -->
 <a-entity id="player"
 gltf-model="#tlacuache"
 animation-mixer="clip: walk; loop: repeat">
 </a-entity>
-
 <!-- CÁMARA -->
 <a-entity id="cameraPivot" position="0 1.5 0">
 <a-entity id="cameraYaw" look-controls="pointerLockEnabled: false">
@@ -228,72 +417,110 @@ animation-mixer="clip: walk; loop: repeat">
 </a-entity>
 </a-entity>
 </a-entity>
-
 </a-entity>
-
 <div id="magicFrame"></div>
 <div id="lucyPopup"></div>
-
 </a-scene>
-
 <script>
+const menuToggle = document.getElementById('menuToggle');
+const menuToggleIcon = document.getElementById('menuToggleIcon');
+const siteMenu = document.getElementById('siteMenu');
+const siteHeader = document.getElementById('siteHeader');
+const compactHeaderQuery = window.matchMedia(
+'(max-width: 767px), (max-height: 500px) and (orientation: landscape)'
+);
+
+function setSiteMenuState(isOpen) {
+siteMenu.classList.toggle('is-open', isOpen);
+menuToggle.setAttribute('aria-expanded', String(isOpen));
+menuToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+menuToggleIcon.textContent = isOpen ? '×' : '☰';
+}
+
+function closeSiteMenu() {
+setSiteMenuState(false);
+}
+
+menuToggle.addEventListener('click', event => {
+event.stopPropagation();
+setSiteMenuState(!siteMenu.classList.contains('is-open'));
+});
+
+siteMenu.querySelectorAll('a').forEach(link => {
+link.addEventListener('click', closeSiteMenu);
+});
+
+document.addEventListener('keydown', event => {
+if (event.key === 'Escape') {
+closeSiteMenu();
+}
+});
+
+document.addEventListener('click', event => {
+if (
+compactHeaderQuery.matches &&
+siteMenu.classList.contains('is-open') &&
+!siteHeader.contains(event.target)
+) {
+closeSiteMenu();
+}
+});
+
+function handleHeaderBreakpointChange(event) {
+if (!event.matches) {
+closeSiteMenu();
+}
+}
+
+if (compactHeaderQuery.addEventListener) {
+compactHeaderQuery.addEventListener('change', handleHeaderBreakpointChange);
+} else {
+compactHeaderQuery.addListener(handleHeaderBreakpointChange);
+}
+
 window.addEventListener('load', () => {
 const scene = document.querySelector('a-scene');
 scene.addEventListener('loaded', () => {
-
 const rig = document.querySelector('#rig');
 const player = document.querySelector('#player');
 const camera = document.querySelector('#gameCamera');
 const cameraYaw = document.querySelector('#cameraYaw');
 const navMeshEl = document.querySelector('[nav-mesh]');
 const salidaTrigger = document.querySelector('#salidaTrigger');
-
 const exitDistance = 1.5;
 let alreadyTriggered = false;
-
 // Variables para múltiples luciérnagas (compatibles con clases o ids)
 const luciernagas = document.querySelectorAll('.luciernaga, #luciernaga');
 const lucPopup = document.getElementById('lucyPopup');
 const lucDistance = 1.5;
 const lucState = new Map();
-
 if (!rig || !player || !camera) {
 console.warn('Faltan elementos rig/player/camera');
 return;
 }
-
 const speed = 4;
 const rotationSmooth = 0.15;
-
 let keys = {};
 let nippleVector = new THREE.Vector2(0, 0);
 let lookInput = new THREE.Vector2(0, 0);
 let lastTime = performance.now();
 let moving = false;
-
 const raycaster = new THREE.Raycaster();
 const downVector = new THREE.Vector3(0, -1, 0);
-
 function angleDifference(a, b) {
 let diff = b - a;
 return Math.atan2(Math.sin(diff), Math.cos(diff));
 }
-
 /* TECLADO */
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-
 /* JOYSTICKS */
 const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
 if (isTouch) {
-
 const leftZone = document.getElementById('joyLeft');
 const rightZone = document.getElementById('joyRight');
-
 leftZone.style.display = 'block';
 rightZone.style.display = 'block';
-
 const moveJoy = nipplejs.create({
 zone: leftZone,
 mode: 'static',
@@ -301,14 +528,11 @@ position: { left: '50%', top: '50%' },
 color: 'white',
 size: 120
 });
-
 moveJoy.on('move', (evt, data) => {
 if (!data || !data.vector) return;
 nippleVector.set(data.vector.x, data.vector.y);
 });
-
 moveJoy.on('end', () => nippleVector.set(0, 0));
-
 const lookJoy = nipplejs.create({
 zone: rightZone,
 mode: 'static',
@@ -316,251 +540,193 @@ position: { left: '50%', top: '50%' },
 color: 'white',
 size: 120
 });
-
 lookJoy.on('move', (evt, data) => {
 if (!data || !data.vector) return;
 lookInput.set(data.vector.x, data.vector.y);
 });
-
 lookJoy.on('end', () => lookInput.set(0, 0));
 }
-
 /* ANIMACIÓN */
 player.addEventListener('model-loaded', () => {
 player.components['animation-mixer']?.pause();
 });
-
 function tick() {
-
 const now = performance.now();
 const delta = (now - lastTime) / 1000;
 lastTime = now;
-
 const input = new THREE.Vector2(0, 0);
-
 if (keys['w']) input.y -= 1;
 if (keys['s']) input.y += 1;
 if (keys['a']) input.x -= 1;
 if (keys['d']) input.x += 1;
-
 input.x += nippleVector.x;
 input.y -= nippleVector.y;
-
 if (input.length() > 0) {
-
 input.normalize();
-
 const forward = new THREE.Vector3();
 camera.object3D.getWorldDirection(forward);
 forward.y = 0;
 forward.normalize();
-
 const right = new THREE.Vector3();
 right.crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
-
 const moveVector = new THREE.Vector3();
 moveVector.addScaledVector(forward, input.y);
 moveVector.addScaledVector(right, -input.x);
-
 const subSteps = 8;
 const cornerFriction = 0.5;
-
 const totalMove = moveVector.clone().multiplyScalar(speed * delta);
 const stepMove = totalMove.clone().divideScalar(subSteps);
-
 let currentPosition = rig.object3D.position.clone();
-
 for (let i = 0; i < subSteps; i++) {
-
 let moved = false;
-
 let testFull = currentPosition.clone().add(stepMove);
 let origin = testFull.clone();
 origin.y += 5;
-
 raycaster.set(origin, downVector);
 let intersects = navMeshEl && navMeshEl.object3D
 ? raycaster.intersectObject(navMeshEl.object3D, true)
 : [];
-
 if (intersects.length > 0) {
 currentPosition.copy(testFull);
 currentPosition.y = intersects[0].point.y;
 moved = true;
 }
-
 if (!moved) {
-
 const tryAxis = (axis, amount) => {
 let reduced = amount;
 for (let r = 0; r < 3; r++) {
 let test = currentPosition.clone();
 test[axis] += reduced;
-
 let o = test.clone();
 o.y += 5;
-
 raycaster.set(o, downVector);
 let hits = navMeshEl && navMeshEl.object3D
 ? raycaster.intersectObject(navMeshEl.object3D, true)
 : [];
-
 if (hits.length > 0) {
 currentPosition[axis] = test[axis];
 currentPosition.y = hits[0].point.y;
 return true;
 }
-
 reduced *= cornerFriction;
 }
 return false;
 };
-
 tryAxis("x", stepMove.x);
 tryAxis("z", stepMove.z);
 }
 }
-
 rig.object3D.position.copy(currentPosition);
-
 const moveAngle = Math.atan2(moveVector.x, moveVector.z);
 const targetRotation = moveAngle + Math.PI;
 const currentRotation = player.object3D.rotation.y;
 const diff = angleDifference(currentRotation, targetRotation);
 player.object3D.rotation.y += diff * rotationSmooth;
-
 if (!moving) {
 player.components['animation-mixer']?.play();
 moving = true;
 }
-
 } else {
 if (moving) {
 player.components['animation-mixer']?.pause();
 moving = false;
 }
 }
-
 /* Ajuste altura navmesh */
 if (navMeshEl && navMeshEl.object3D) {
 const origin = rig.object3D.position.clone();
 origin.y += 5;
-
 raycaster.set(origin, downVector);
 const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
-
 if (intersects.length > 0) {
 rig.object3D.position.y = intersects[0].point.y;
 }
 }
-
 /* ROTACIÓN CÁMARA */
 const look = cameraYaw.components['look-controls'];
 if (look) {
 const rotSpeed = 1.5;
-
 look.yawObject.rotation.y -= lookInput.x * rotSpeed * delta;
 look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
-
 const maxPitch = Math.PI / 2 - 0.1;
 look.pitchObject.rotation.x = Math.max(
 -maxPitch,
 Math.min(maxPitch, look.pitchObject.rotation.x)
 );
 }
-
 /* ===== DETECCIÓN LUCÉRNAGA ===== */
 luciernagas.forEach(luc => {
-
 // buscar trigger hijo (soporta tanto class como id)
 const trigger = luc.querySelector('.luciernagaTrigger, #luciernagaTrigger');
 if (!trigger) return;
-
 const playerPos = rig.object3D.position;
 const triggerPos = new THREE.Vector3();
 trigger.object3D.getWorldPosition(triggerPos);
-
 const distance = playerPos.distanceTo(triggerPos);
 const wasInside = lucState.get(luc) || false;
-
 if (distance < lucDistance && !wasInside) {
 lucState.set(luc, true);
-
 // mensaje dinámico desde data-message
 const obra = luc.dataset.obra || "Obra desconocida";
 const artista = luc.dataset.artista || "Autor desconocido";
-
 lucPopup.innerHTML = `
 <strong>${obra}</strong><br>
 <span style="opacity:0.8">${artista}</span>
 `;
 lucPopup.classList.add('show'); // usa la clase .show para animación
 }
-
 if (distance >= lucDistance && wasInside) {
 lucState.set(luc, false);
 lucPopup.classList.remove('show');
 }
-
 });
-
 /* ===== DETECCIÓN DE SALIDA CON TRIGGER ===== */
 if (salidaTrigger && !alreadyTriggered) {
-
 const playerPos = rig.object3D.position.clone();
 const triggerPos = new THREE.Vector3();
 salidaTrigger.object3D.getWorldPosition(triggerPos);
-
 const distance = playerPos.distanceTo(triggerPos);
-
 if (distance < exitDistance) {
 alreadyTriggered = true;
-
 console.log("Salida activada");
-
 setTimeout(() => {
 window.location.href = "https://youtu.be/8Xo1rKX7Les?si=jWto45dyINOwZaBx";
 }, 300);
 }
 }
-
 requestAnimationFrame(tick);
 }
-
 tick();
-
 });
 });
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYwv9BW-cThCjT5Phq7cBDJJFuIZTvA24rpxDlSgbQtlr3Inr4lbHf5pXUB8r6X47GaxQfCLmyIU1X/pub?output=csv";
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYwv9BW-cThCjT5Phq7cBDJJFuIZTvA24rpxDlSgbQtlr3Inr4lbHf5pXUB8r6X47GaxQfCLmyIU1X/pub?output=csv"; 
- 
-fetch(SHEET_URL) 
-.then(res => res.text()) 
-.then(csv => { 
- 
-const rows = csv.split("\n").slice(1); 
- 
-rows.forEach(row => { 
-const columns = row.split(","); 
- 
-const id = columns[0]?.trim(); 
-const obra = columns[1]?.trim(); 
-const artista = columns[2]?.trim(); 
- 
-const entity = document.getElementById(id); 
- 
-if (entity) { 
-entity.dataset.obra = obra; 
-entity.dataset.artista = artista; 
-} 
-}); 
- 
-console.log("Ficha técnica cargada"); 
-}) 
-.catch(err => console.error(err)); 
- 
-</script> 
- 
-</body> 
- 
+fetch(SHEET_URL)
+.then(res => res.text())
+.then(csv => {
+
+const rows = csv.split("\n").slice(1);
+
+rows.forEach(row => {
+const columns = row.split(",");
+
+const id = columns[0]?.trim();
+const obra = columns[1]?.trim();
+const artista = columns[2]?.trim();
+
+const entity = document.getElementById(id);
+
+if (entity) {
+entity.dataset.obra = obra;
+entity.dataset.artista = artista;
+}
+});
+
+console.log("Ficha técnica cargada");
+})
+.catch(err => console.error(err));
+</script>
+
+</body>
+
 </html>
