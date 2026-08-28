@@ -249,6 +249,10 @@ inset 0 0 26vmin rgba(178,178,178,0.15);
 filter: blur(2px);
 }
 
+.a-enter-vr-button {
+display: none !important;
+}
+
 @media (max-width: 767px), (max-height: 500px) and (orientation: landscape) {
 :root {
 --header-height: 72px;
@@ -592,6 +596,29 @@ compactHeaderQuery.addEventListener('change', handleHeaderBreakpointChange);
 } else {
 compactHeaderQuery.addListener(handleHeaderBreakpointChange);
 }
+
+const sceneForFullscreenGuard = document.querySelector('a-scene');
+
+document.addEventListener('fullscreenchange', () => {
+const fullscreenElement = document.fullscreenElement;
+
+if (
+fullscreenElement &&
+sceneForFullscreenGuard &&
+(
+fullscreenElement === sceneForFullscreenGuard ||
+sceneForFullscreenGuard.contains(fullscreenElement)
+)
+) {
+document.exitFullscreen();
+}
+});
+
+sceneForFullscreenGuard.addEventListener('enter-vr', () => {
+if (sceneForFullscreenGuard.is('vr-mode')) {
+sceneForFullscreenGuard.exitVR();
+}
+});
 
 window.addEventListener('load', () => {
 const scene = document.querySelector('a-scene');
