@@ -407,82 +407,82 @@ visible="false">
 <!-- PLANOS / FOTOS -->
 <a-image
 src="assets/foto1.jpg"
-position="-3 1.5 -1"
+position="-6 1.2 -4"
 width="1.6"
 height="2"
-rotation="0 35 0">
+rotation="0 90 0">
 </a-image>
 
 <a-image
 src="assets/foto2.jpg"
-position="-5 1.5 2"
+position="-5.2 2.8 -1.6"
 width="1.6"
 height="2"
-rotation="0 70 0">
+rotation="0 90 0">
 </a-image>
 
 <a-image
 src="assets/foto3.jpg"
-position="-4 1.5 5"
+position="-6.5 1.7 1.1"
 width="1.6"
 height="2"
-rotation="0 145 0">
+rotation="0 90 0">
 </a-image>
 
 <a-image
 src="assets/foto4.jpg"
-position="0 1.5 6"
+position="-5.5 3.4 3.8"
 width="1.6"
 height="2"
-rotation="0 180 0">
+rotation="0 90 0">
 </a-image>
 
 <a-image
 src="assets/foto5.jpg"
-position="4 1.5 5"
+position="-6.2 2.3 6.2"
 width="1.6"
 height="2"
-rotation="0 215 0">
+rotation="0 90 0">
 </a-image>
 
 <a-image
 src="assets/foto6.jpg"
-position="6 1.5 2"
+position="6 2.5 -4.5"
 width="1.6"
 height="2"
-rotation="0 270 0">
+rotation="0 -90 0">
 </a-image>
 
 <a-image
 src="assets/foto7.jpg"
-position="5 1.5 -2"
+position="5.3 1.4 -1.8"
 width="1.6"
 height="2"
-rotation="0 300 0">
+rotation="0 -90 0">
 </a-image>
 
 <a-image
 src="assets/foto8.jpg"
-position="2 1.5 -4"
+position="6.4 3.1 0.8"
 width="1.6"
 height="2"
-rotation="0 350 0">
+rotation="0 -90 0">
 </a-image>
 
 <a-image
 src="assets/foto9.jpg"
-position="-2 1.5 -4"
+position="5.6 1.9 3.5"
 width="1.6"
 height="2"
-rotation="0 20 0">
+rotation="0 -90 0">
 </a-image>
 
 <a-image
 src="assets/foto10.jpg"
-position="-6 1.5 -3"
+position="6.2 2.9 6"
 width="1.6"
 height="2"
-rotation="0 55 0">
+rotation="0 -90 0">
 </a-image>
 
 <!-- LUCIERNAGA -->
@@ -597,29 +597,6 @@ compactHeaderQuery.addEventListener('change', handleHeaderBreakpointChange);
 compactHeaderQuery.addListener(handleHeaderBreakpointChange);
 }
 
-const sceneForFullscreenGuard = document.querySelector('a-scene');
-
-document.addEventListener('fullscreenchange', () => {
-const fullscreenElement = document.fullscreenElement;
-
-if (
-fullscreenElement &&
-sceneForFullscreenGuard &&
-(
-fullscreenElement === sceneForFullscreenGuard ||
-sceneForFullscreenGuard.contains(fullscreenElement)
-)
-) {
-document.exitFullscreen();
-}
-});
-
-sceneForFullscreenGuard.addEventListener('enter-vr', () => {
-if (sceneForFullscreenGuard.is('vr-mode')) {
-sceneForFullscreenGuard.exitVR();
-}
-});
-
 window.addEventListener('load', () => {
 const scene = document.querySelector('a-scene');
 
@@ -661,7 +638,18 @@ return Math.atan2(Math.sin(diff), Math.cos(diff));
 }
 
 /* TECLADO */
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keydown', e => {
+const key = e.key.toLowerCase();
+
+if (key === 'f') {
+e.preventDefault();
+e.stopImmediatePropagation();
+return;
+}
+
+keys[key] = true;
+}, true);
+
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
 /* JOYSTICKS */
