@@ -400,8 +400,8 @@ aria-label="Abrir menú">
 </nav>
 </header>
 
-<audio id="backgroundAudio" loop autoplay>
-<source src="assets/chispero.mp3" type="audio/mp3">
+<audio id="backgroundAudio" loop autoplay preload="auto">
+<source src="assets/chispero.mp3" type="audio/mpeg">
 </audio>
 
 <button
@@ -634,8 +634,11 @@ playBackgroundAudio();
 
 backgroundAudio.addEventListener('volumechange', updateAudioToggle);
 
-document.addEventListener('pointerdown', playBackgroundAudio, { once: true });
-document.addEventListener('keydown', playBackgroundAudio, { once: true });
+window.addEventListener('touchstart', playBackgroundAudio, true);
+window.addEventListener('touchend', playBackgroundAudio, true);
+window.addEventListener('pointerdown', playBackgroundAudio, true);
+window.addEventListener('click', playBackgroundAudio, true);
+window.addEventListener('keydown', playBackgroundAudio, true);
 
 playBackgroundAudio();
 
