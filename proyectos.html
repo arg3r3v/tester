@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHISPERO</title>
+<meta name="facebook-domain-verification" content="gfh4qw4wnhy99uwo0i1xo8lrn4e9h9" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+
+<style>
+@font-face {
+font-family: "Jingleberry";
+src: url("assets/Jingleberry.otf") format("opentype");
+font-weight: normal;
+font-style: normal;
+font-display: swap;
+}
+
+:root {
+--header-height: 92px;
+--header-padding: clamp(24px, 4vw, 72px);
+--header-text: #f6f5ef;
+--header-shadow: rgba(0, 0, 0, 0.52);
+}
+
+html,
+body {
+height: 100%;
+margin: 0;
+font-family: "Roboto", Arial, sans-serif;
+}
+
+#lucyPopup {
+position: absolute;
+top: 18%;
+left: 50%;
+transform: translateX(-50%);
+min-width: 220px;
+max-width: 60%;
+padding: 12px 16px;
+background: rgba(10,10,10,0.85);
+color: #fff;
+font-family: "Roboto", Arial, sans-serif;
+font-size: 14px;
+border-radius: 8px;
+text-align: center;
+z-index: 10000;
+display: none;
+pointer-events: none;
+}
+
+#lucyPopup.show {
+display: block;
+animation: popupIn 180ms ease;
+}
+
+@keyframes popupIn {
+from {
+transform: translateX(-50%) translateY(-6px);
+opacity: 0;
+}
+
+to {
+transform: translateX(-50%) translateY(0);
+opacity: 1;
+}
+}
+
+/* Header */
+.site-header {
+position: fixed;
+top: 0;
+right: 0;
+left: 0;
+z-index: 10001;
+height: var(--header-height);
+box-sizing: border-box;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 32px;
+padding:
+env(safe-area-inset-top)
+var(--header-padding)
+0;
+background: linear-gradient(
+180deg,
+rgba(12, 12, 12, 0.5) 0%,
+rgba(12, 12, 12, 0.26) 48%,
+rgba(12, 12, 12, 0) 100%
+);
+pointer-events: none;
+}
+
+.site-brand {
+position: relative;
+z-index: 1;
+display: inline-flex;
+align-items: center;
+min-height: 44px;
+color: var(--header-text);
+font-family: "Jingleberry", sans-serif;
+font-size: clamp(1.75rem, 2.7vw, 2.5rem);
+font-weight: normal;
+line-height: 1;
+letter-spacing: 0.04em;
+text-decoration: none;
+text-shadow:
+0 2px 12px var(--header-shadow),
+0 1px 1px rgba(0, 0, 0, 0.8);
+white-space: nowrap;
+pointer-events: auto;
+transition: opacity 180ms ease;
+}
+
+.site-brand:hover,
+.site-brand:focus-visible {
+color: var(--header-text);
+opacity: 0.72;
+}
+
+.site-nav {
+position: relative;
+z-index: 1;
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: clamp(24px, 3vw, 52px);
+margin-left: auto;
+pointer-events: auto;
+}
+
+.site-nav a {
+position: relative;
+padding: 10px 0;
+color: var(--header-text);
+font-family: "Roboto", Arial, sans-serif;
+font-size: clamp(0.78rem, 1.05vw, 0.95rem);
+font-weight: 500;
+letter-spacing: 0.25em;
+line-height: 1;
+text-decoration: none;
+text-shadow: 0 2px 10px var(--header-shadow);
+white-space: nowrap;
+transition: opacity 180ms ease;
+}
+
+.site-nav a::after {
+content: "";
+position: absolute;
+right: 0;
+bottom: 4px;
+left: 0;
+height: 1px;
+background: currentColor;
+opacity: 0;
+transform: scaleX(0.55);
+transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.site-nav a:hover,
+.site-nav a:focus-visible {
+color: var(--header-text);
+opacity: 0.68;
+}
+
+.site-nav a:hover::after,
+.site-nav a:focus-visible::after {
+opacity: 1;
+transform: scaleX(1);
+}
+
+.menu-toggle {
+position: relative;
+z-index: 1;
+display: none;
+place-items: center;
+width: 46px;
+height: 46px;
+padding: 0;
+border: 0;
+background: transparent;
+color: var(--header-text);
+font-family: "Roboto", Arial, sans-serif;
+font-size: 1.7rem;
+line-height: 1;
+text-shadow: 0 2px 10px var(--header-shadow);
+cursor: pointer;
+pointer-events: auto;
+touch-action: manipulation;
+transition: opacity 180ms ease;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+opacity: 0.68;
+}
+
+.audio-toggle {
+position: fixed;
+top: calc(var(--header-height) + 14px);
+right: var(--header-padding);
+z-index: 10000;
+padding: 9px 12px;
+border: 1px solid rgba(255, 255, 255, 0.18);
+background: rgba(12, 12, 12, 0.45);
+color: var(--header-text);
+font-family: "Roboto", Arial, sans-serif;
+font-size: 0.68rem;
+font-weight: 500;
+letter-spacing: 0.16em;
+line-height: 1;
+text-shadow: 0 2px 10px var(--header-shadow);
+cursor: pointer;
+transition: opacity 180ms ease, background 180ms ease;
+}
+
+.audio-toggle:hover,
+.audio-toggle:focus-visible {
+opacity: 0.72;
+background: rgba(12, 12, 12, 0.66);
+}
+
+.audio-toggle.is-muted {
+opacity: 0.58;
+}
+
+.sr-only {
+position: absolute;
+width: 1px;
+height: 1px;
+padding: 0;
+margin: -1px;
+overflow: hidden;
+clip: rect(0, 0, 0, 0);
+white-space: nowrap;
+border: 0;
+}
+
+/* Zona joystick */
+#joyLeft,
+#joyRight {
+position: absolute;
+bottom: 20px;
+width: 160px;
+height: 160px;
+touch-action: none;
+display: none;
+z-index: 9999;
+}
+
+#joyLeft {
+left: 20px;
+}
+
+#joyRight {
+right: 20px;
+}
+
+#magicFrame {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 9999;
+background: transparent;
+box-shadow:
+inset 0 0 8vmin rgba(178,178,178,0.8),
+inset 0 0 14vmin rgba(178,178,178,0.6),
+inset 0 0 20vmin rgba(178,178,178,0.35),
+inset 0 0 26vmin rgba(178,178,178,0.15);
+filter: blur(2px);
+}
+
+.a-enter-vr-button {
+display: none !important;
+}
+
+@media (max-width: 767px), (max-height: 500px) and (orientation: landscape) {
+:root {
+--header-height: 72px;
+--header-padding: max(18px, env(safe-area-inset-left));
+}
+
+.site-header {
+gap: 16px;
+padding-right: max(18px, env(safe-area-inset-right));
+padding-left: max(18px, env(safe-area-inset-left));
+background: linear-gradient(
+180deg,
+rgba(12, 12, 12, 0.58) 0%,
+rgba(12, 12, 12, 0.2) 72%,
+rgba(12, 12, 12, 0) 100%
+);
+}
+
+.site-brand {
+font-size: clamp(1.625rem, 7vw, 1.85rem);
+}
+
+.menu-toggle {
+display: grid;
+flex: 0 0 auto;
+}
+
+.site-nav {
+position: fixed;
+top: calc(var(--header-height) + env(safe-area-inset-top));
+right: 0;
+display: grid;
+grid-template-columns: 1fr;
+align-items: stretch;
+gap: 0;
+width: min(320px, 84vw);
+max-height: calc(100dvh - var(--header-height) - env(safe-area-inset-top));
+margin: 0;
+padding: 10px 20px 18px;
+overflow-y: auto;
+background: linear-gradient(
+135deg,
+rgba(12, 12, 12, 0.96),
+rgba(25, 25, 24, 0.91)
+);
+border-left: 1px solid rgba(255, 255, 255, 0.18);
+box-shadow: -18px 18px 36px rgba(0, 0, 0, 0.2);
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+transform: translateX(18px);
+transition:
+opacity 170ms ease,
+transform 170ms ease,
+visibility 170ms step-end;
+}
+
+.site-nav.is-open {
+opacity: 1;
+visibility: visible;
+pointer-events: auto;
+transform: translateX(0);
+transition:
+opacity 170ms ease,
+transform 170ms ease,
+visibility 0ms;
+}
+
+.site-nav a {
+display: flex;
+align-items: center;
+min-height: 52px;
+padding: 0;
+color: var(--header-text);
+font-size: 0.92rem;
+font-weight: 500;
+letter-spacing: 0.25em;
+text-shadow: none;
+}
+
+.site-nav a::after {
+right: auto;
+bottom: 7px;
+left: 0;
+width: 32px;
+}
+
+.site-nav a:hover,
+.site-nav a:focus-visible {
+opacity: 0.7;
+}
+}
+</style>
+</head>
+
+<body style="margin:0; overflow:hidden;">
+<header class="site-header" id="siteHeader">
+<a class="site-brand" href="#inicio" aria-label="Chispero, ir a Inicio">CHISPERO</a>
+
+<button
+class="menu-toggle"
+id="menuToggle"
+type="button"
+aria-expanded="false"
+aria-controls="siteMenu"
+aria-label="Abrir menú">
+<span id="menuToggleIcon" aria-hidden="true">☰</span>
+<span class="sr-only">Menú de navegación</span>
+</button>
+
+<nav class="site-nav" id="siteMenu" aria-label="Navegación principal">
+<a href="#proyectos">PROYECTOS</a>
+<a href="#nosotros">NOSOTROS</a>
+<a href="#servicios">SERVICIOS</a>
+<a href="#contacto">CONTACTO</a>
+</nav>
+</header>
+
+<audio id="backgroundAudio" loop autoplay preload="auto">
+<source src="assets/chispero.mp3" type="audio/mpeg">
+</audio>
+
+<button
+class="audio-toggle"
+id="audioToggle"
+type="button"
+aria-pressed="false"
+aria-label="Silenciar audio">
+SONIDO: ACTIVADO
+</button>
+
+<!--Zona para joystick-->
+<div id="joyLeft"></div>
+<div id="joyRight"></div>
+
+<a-scene
+id="inicio"
+vr-mode-ui="enabled: false"
+background="color: #B2B2B2"
+renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+shadow="type: pcfsoft">
+
+<!-- Assets -->
+<a-assets>
+<a-asset-item id="tronco" src="assets/tronco.glb"></a-asset-item>
+<a-asset-item id="ramas" src="assets/ramas.glb"></a-asset-item>
+<a-asset-item id="hongos" src="assets/hongos.glb"></a-asset-item>
+<a-asset-item id="tlacuache" src="assets/tlacuache.glb"></a-asset-item>
+<a-asset-item id="navmesh" src="assets/navmesh.glb"></a-asset-item>
+<a-asset-item id="salida" src="assets/salida.glb"></a-asset-item>
+<a-asset-item id="luciernaga" src="assets/luciernaga.glb"></a-asset-item>
+</a-assets>
+
+<a-entity
+gltf-model="#navmesh"
+nav-mesh
+visible="false">
+</a-entity>
+
+<!-- Modelos -->
+<a-entity gltf-model="#tronco" position="0 0 0"></a-entity>
+<a-entity gltf-model="#ramas" position="0 0 0"></a-entity>
+<a-entity gltf-model="#hongos" position="0 0 0"></a-entity>
+
+<!-- PLANOS / FOTOS -->
+<a-entity id="grupoFotos" position="0 0 0" rotation="0 90 0">
+
+<a-image
+src="assets/foto1.jpg"
+position="-3 3 -5"
+width="1.6"
+height="2"
+rotation="0 90 0">
+</a-image>
+
+<a-image
+src="assets/foto2.jpg"
+position="-2.5 1 -1.6"
+width="1.6"
+height="2"
+rotation="0 90 0">
+</a-image>
+
+<a-image
+src="assets/foto3.jpg"
+position="-3 0.7 1.1"
+width="1.6"
+height="2"
+rotation="0 90 0">
+</a-image>
+
+<a-image
+src="assets/foto4.jpg"
+position="-2.5 3.4 3.8"
+width="1.6"
+height="2"
+rotation="0 90 0">
+</a-image>
+
+<a-image
+src="assets/foto5.jpg"
+position="-3 2.3 8"
+width="1.6"
+height="2"
+rotation="0 90 0">
+</a-image>
+
+<a-image
+src="assets/foto6.jpg"
+position="3 2.5 -4.5"
+width="1.6"
+height="2"
+rotation="0 -90 0">
+</a-image>
+
+<a-image
+src="assets/foto7.jpg"
+position="2.5 1.4 -1.8"
+width="1.6"
+height="2"
+rotation="0 -90 0">
+</a-image>
+
+<a-image
+src="assets/foto8.jpg"
+position="3 3.1 0.8"
+width="1.6"
+height="2"
+rotation="0 -90 0">
+</a-image>
+
+<a-image
+src="assets/foto9.jpg"
+position="3 1.9 3.5"
+width="1.6"
+height="2"
+rotation="0 -90 0">
+</a-image>
+
+<a-image
+src="assets/foto10.jpg"
+position="3 2.9 6"
+width="1.6"
+height="2"
+rotation="0 -90 0">
+</a-image>
+
+</a-entity>
+
+<!-- LUCIERNAGA -->
+<a-entity
+class="luciernaga"
+gltf-model="#luciernaga"
+id="luciernaga1"
+position="2 1 0"
+animation-mixer="clip: *; loop: repeat">
+
+<a-entity
+id="luciernagaTrigger"
+geometry="primitive: box; width: 0.5; height: 2; depth: 1"
+material="opacity: 0; transparent: true"
+position="0 0 0">
+</a-entity>
+
+</a-entity>
+
+<!-- salida -->
+<a-entity gltf-model="#salida" id="salida" position="9 0 1.2">
+
+<a-entity
+id="salidaTrigger"
+geometry="primitive: box; width: 0.5; height: 2; depth: 1"
+material="opacity: 0; transparent: true"
+position="0 1 0">
+</a-entity>
+
+</a-entity>
+
+<!-- RIG -->
+<a-entity id="rig" position="0 0 0">
+
+<!-- TLACUACHE -->
+<a-entity
+id="player"
+gltf-model="#tlacuache"
+animation-mixer="clip: walk; loop: repeat">
+</a-entity>
+
+<!-- CÁMARA -->
+<a-entity id="cameraPivot" position="0 1.5 0">
+<a-entity id="cameraYaw" look-controls="pointerLockEnabled: false">
+<a-entity id="cameraBoom" position="0 1 4">
+<a-entity id="gameCamera" camera></a-entity>
+</a-entity>
+</a-entity>
+</a-entity>
+
+</a-entity>
+
+<div id="magicFrame"></div>
+<div id="lucyPopup"></div>
+
+</a-scene>
+
+<script>
+const menuToggle = document.getElementById('menuToggle');
+const menuToggleIcon = document.getElementById('menuToggleIcon');
+const siteMenu = document.getElementById('siteMenu');
+const siteHeader = document.getElementById('siteHeader');
+const backgroundAudio = document.getElementById('backgroundAudio');
+const audioToggle = document.getElementById('audioToggle');
+const compactHeaderQuery = window.matchMedia(
+'(max-width: 767px), (max-height: 500px) and (orientation: landscape)'
+);
+
+function setSiteMenuState(isOpen) {
+siteMenu.classList.toggle('is-open', isOpen);
+menuToggle.setAttribute('aria-expanded', String(isOpen));
+menuToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
+menuToggleIcon.textContent = isOpen ? '×' : '☰';
+}
+
+function closeSiteMenu() {
+setSiteMenuState(false);
+}
+
+function updateAudioToggle() {
+const isMuted = backgroundAudio.muted;
+
+audioToggle.classList.toggle('is-muted', isMuted);
+audioToggle.textContent = isMuted
+? 'SONIDO: DESACTIVADO'
+: 'SONIDO: ACTIVADO';
+audioToggle.setAttribute('aria-pressed', String(isMuted));
+audioToggle.setAttribute(
+'aria-label',
+isMuted ? 'Activar audio' : 'Silenciar audio'
+);
+}
+
+function playBackgroundAudio() {
+backgroundAudio.play().catch(() => {});
+}
+
+audioToggle.addEventListener('click', () => {
+backgroundAudio.muted = !backgroundAudio.muted;
+updateAudioToggle();
+playBackgroundAudio();
+});
+
+backgroundAudio.addEventListener('volumechange', updateAudioToggle);
+
+window.addEventListener('touchstart', playBackgroundAudio, true);
+window.addEventListener('touchend', playBackgroundAudio, true);
+window.addEventListener('pointerdown', playBackgroundAudio, true);
+window.addEventListener('click', playBackgroundAudio, true);
+window.addEventListener('keydown', playBackgroundAudio, true);
+
+playBackgroundAudio();
+
+menuToggle.addEventListener('click', event => {
+event.stopPropagation();
+setSiteMenuState(!siteMenu.classList.contains('is-open'));
+});
+
+siteMenu.querySelectorAll('a').forEach(link => {
+link.addEventListener('click', closeSiteMenu);
+});
+
+document.addEventListener('keydown', event => {
+if (event.key === 'Escape') {
+closeSiteMenu();
+}
+});
+
+document.addEventListener('click', event => {
+if (
+compactHeaderQuery.matches &&
+siteMenu.classList.contains('is-open') &&
+!siteHeader.contains(event.target)
+) {
+closeSiteMenu();
+}
+});
+
+function handleHeaderBreakpointChange(event) {
+if (!event.matches) {
+closeSiteMenu();
+}
+}
+
+if (compactHeaderQuery.addEventListener) {
+compactHeaderQuery.addEventListener('change', handleHeaderBreakpointChange);
+} else {
+compactHeaderQuery.addListener(handleHeaderBreakpointChange);
+}
+
+window.addEventListener('load', () => {
+const scene = document.querySelector('a-scene');
+
+scene.addEventListener('loaded', () => {
+const rig = document.querySelector('#rig');
+const player = document.querySelector('#player');
+const camera = document.querySelector('#gameCamera');
+const cameraYaw = document.querySelector('#cameraYaw');
+const navMeshEl = document.querySelector('[nav-mesh]');
+const salidaTrigger = document.querySelector('#salidaTrigger');
+const exitDistance = 1.5;
+let alreadyTriggered = false;
+
+// Variables para múltiples luciérnagas (compatibles con clases o ids)
+const luciernagas = document.querySelectorAll('.luciernaga, #luciernaga');
+const lucPopup = document.getElementById('lucyPopup');
+const lucDistance = 1.5;
+const lucState = new Map();
+
+if (!rig || !player || !camera) {
+console.warn('Faltan elementos rig/player/camera');
+return;
+}
+
+const speed = 4;
+const rotationSmooth = 0.15;
+let keys = {};
+let nippleVector = new THREE.Vector2(0, 0);
+let lookInput = new THREE.Vector2(0, 0);
+let lastTime = performance.now();
+let moving = false;
+
+const raycaster = new THREE.Raycaster();
+const downVector = new THREE.Vector3(0, -1, 0);
+
+function angleDifference(a, b) {
+let diff = b - a;
+return Math.atan2(Math.sin(diff), Math.cos(diff));
+}
+
+/* TECLADO */
+window.addEventListener('keydown', e => {
+const key = e.key.toLowerCase();
+
+if (key === 'f') {
+e.preventDefault();
+e.stopImmediatePropagation();
+return;
+}
+
+keys[key] = true;
+}, true);
+
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+/* JOYSTICKS */
+const isTouch = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+if (isTouch) {
+const leftZone = document.getElementById('joyLeft');
+const rightZone = document.getElementById('joyRight');
+
+leftZone.style.display = 'block';
+rightZone.style.display = 'block';
+
+const moveJoy = nipplejs.create({
+zone: leftZone,
+mode: 'static',
+position: { left: '50%', top: '50%' },
+color: 'white',
+size: 120
+});
+
+moveJoy.on('move', (evt, data) => {
+if (!data || !data.vector) return;
+nippleVector.set(data.vector.x, data.vector.y);
+});
+
+moveJoy.on('end', () => nippleVector.set(0, 0));
+
+const lookJoy = nipplejs.create({
+zone: rightZone,
+mode: 'static',
+position: { left: '50%', top: '50%' },
+color: 'white',
+size: 120
+});
+
+lookJoy.on('move', (evt, data) => {
+if (!data || !data.vector) return;
+lookInput.set(data.vector.x, data.vector.y);
+});
+
+lookJoy.on('end', () => lookInput.set(0, 0));
+}
+
+/* ANIMACIÓN */
+player.addEventListener('model-loaded', () => {
+player.components['animation-mixer']?.pause();
+});
+
+function tick() {
+const now = performance.now();
+const delta = (now - lastTime) / 1000;
+lastTime = now;
+
+const input = new THREE.Vector2(0, 0);
+
+if (keys['w']) input.y -= 1;
+if (keys['s']) input.y += 1;
+if (keys['a']) input.x -= 1;
+if (keys['d']) input.x += 1;
+
+input.x += nippleVector.x;
+input.y -= nippleVector.y;
+
+if (input.length() > 0) {
+input.normalize();
+
+const forward = new THREE.Vector3();
+camera.object3D.getWorldDirection(forward);
+forward.y = 0;
+forward.normalize();
+
+const right = new THREE.Vector3();
+right.crossVectors(forward, new THREE.Vector3(0,1,0)).normalize();
+
+const moveVector = new THREE.Vector3();
+moveVector.addScaledVector(forward, input.y);
+moveVector.addScaledVector(right, -input.x);
+
+const subSteps = 8;
+const cornerFriction = 0.5;
+const totalMove = moveVector.clone().multiplyScalar(speed * delta);
+const stepMove = totalMove.clone().divideScalar(subSteps);
+
+let currentPosition = rig.object3D.position.clone();
+
+for (let i = 0; i < subSteps; i++) {
+let moved = false;
+let testFull = currentPosition.clone().add(stepMove);
+let origin = testFull.clone();
+
+origin.y += 5;
+raycaster.set(origin, downVector);
+
+let intersects = navMeshEl && navMeshEl.object3D
+? raycaster.intersectObject(navMeshEl.object3D, true)
+: [];
+
+if (intersects.length > 0) {
+currentPosition.copy(testFull);
+currentPosition.y = intersects[0].point.y;
+moved = true;
+}
+
+if (!moved) {
+const tryAxis = (axis, amount) => {
+let reduced = amount;
+
+for (let r = 0; r < 3; r++) {
+let test = currentPosition.clone();
+test[axis] += reduced;
+
+let o = test.clone();
+o.y += 5;
+raycaster.set(o, downVector);
+
+let hits = navMeshEl && navMeshEl.object3D
+? raycaster.intersectObject(navMeshEl.object3D, true)
+: [];
+
+if (hits.length > 0) {
+currentPosition[axis] = test[axis];
+currentPosition.y = hits[0].point.y;
+return true;
+}
+
+reduced *= cornerFriction;
+}
+
+return false;
+};
+
+tryAxis("x", stepMove.x);
+tryAxis("z", stepMove.z);
+}
+}
+
+rig.object3D.position.copy(currentPosition);
+
+const moveAngle = Math.atan2(moveVector.x, moveVector.z);
+const targetRotation = moveAngle + Math.PI;
+const currentRotation = player.object3D.rotation.y;
+const diff = angleDifference(currentRotation, targetRotation);
+
+player.object3D.rotation.y += diff * rotationSmooth;
+
+if (!moving) {
+player.components['animation-mixer']?.play();
+moving = true;
+}
+} else {
+if (moving) {
+player.components['animation-mixer']?.pause();
+moving = false;
+}
+}
+
+/* Ajuste altura navmesh */
+if (navMeshEl && navMeshEl.object3D) {
+const origin = rig.object3D.position.clone();
+origin.y += 5;
+
+raycaster.set(origin, downVector);
+
+const intersects = raycaster.intersectObject(navMeshEl.object3D, true);
+
+if (intersects.length > 0) {
+rig.object3D.position.y = intersects[0].point.y;
+}
+}
+
+/* ROTACIÓN CÁMARA */
+const look = cameraYaw.components['look-controls'];
+
+if (look) {
+const rotSpeed = 1.5;
+
+look.yawObject.rotation.y -= lookInput.x * rotSpeed * delta;
+look.pitchObject.rotation.x -= lookInput.y * rotSpeed * delta;
+
+const maxPitch = Math.PI / 2 - 0.1;
+
+look.pitchObject.rotation.x = Math.max(
+-maxPitch,
+Math.min(maxPitch, look.pitchObject.rotation.x)
+);
+}
+
+/* ===== DETECCIÓN LUCÉRNAGA ===== */
+luciernagas.forEach(luc => {
+const trigger = luc.querySelector('.luciernagaTrigger, #luciernagaTrigger');
+
+if (!trigger) return;
+
+const playerPos = rig.object3D.position;
+const triggerPos = new THREE.Vector3();
+
+trigger.object3D.getWorldPosition(triggerPos);
+
+const distance = playerPos.distanceTo(triggerPos);
+const wasInside = lucState.get(luc) || false;
+
+if (distance < lucDistance && !wasInside) {
+lucState.set(luc, true);
+
+const obra = luc.dataset.obra || "Obra desconocida";
+const artista = luc.dataset.artista || "Autor desconocido";
+
+lucPopup.innerHTML = `
+<strong>${obra}</strong><br>
+<span style="opacity:0.8">${artista}</span>
+`;
+
+lucPopup.classList.add('show');
+}
+
+if (distance >= lucDistance && wasInside) {
+lucState.set(luc, false);
+lucPopup.classList.remove('show');
+}
+});
+
+/* ===== DETECCIÓN DE SALIDA CON TRIGGER ===== */
+if (salidaTrigger && !alreadyTriggered) {
+const playerPos = rig.object3D.position.clone();
+const triggerPos = new THREE.Vector3();
+
+salidaTrigger.object3D.getWorldPosition(triggerPos);
+
+const distance = playerPos.distanceTo(triggerPos);
+
+if (distance < exitDistance) {
+alreadyTriggered = true;
+
+console.log("Salida activada");
+
+setTimeout(() => {
+window.location.href = "https://youtu.be/8Xo1rKX7Les?si=jWto45dyINOwZaBx";
+}, 300);
+}
+}
+
+requestAnimationFrame(tick);
+}
+
+tick();
+});
+});
+
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYwv9BW-cThCjT5Phq7cBDJJFuIZTvA24rpxDlSgbQtlr3Inr4lbHf5pXUB8r6X47GaxQfCLmyIU1X/pub?output=csv";
+
+fetch(SHEET_URL)
+.then(res => res.text())
+.then(csv => {
+const rows = csv.split("\n").slice(1);
+
+rows.forEach(row => {
+const columns = row.split(",");
+
+const id = columns[0]?.trim();
+const obra = columns[1]?.trim();
+const artista = columns[2]?.trim();
+
+const entity = document.getElementById(id);
+
+if (entity) {
+entity.dataset.obra = obra;
+entity.dataset.artista = artista;
+}
+});
+
+console.log("Ficha técnica cargada");
+})
+.catch(err => console.error(err));
+</script>
+
+</body>
+</html>
