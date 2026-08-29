@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CHISPERO</title>
-  <link rel="icon" type="image/png" href="assets/iconpag.png">
+<link rel="icon" type="image/png" href="assets/iconpag.png">
 <meta name="facebook-domain-verification" content="gfh4qw4wnhy99uwo0i1xo8lrn4e9h9" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -233,6 +233,146 @@ background: rgba(12, 12, 12, 0.66);
 opacity: 0.58;
 }
 
+.instructions-popup {
+position: fixed;
+inset: 0;
+z-index: 10002;
+display: grid;
+place-items: center;
+padding: 24px;
+box-sizing: border-box;
+background: rgba(12, 12, 12, 0.42);
+backdrop-filter: blur(6px);
+opacity: 1;
+visibility: visible;
+transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+.instructions-popup.is-hidden {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+}
+
+.instructions-dialog {
+position: relative;
+width: min(420px, 100%);
+padding: 34px 32px 24px;
+box-sizing: border-box;
+overflow: hidden;
+background: linear-gradient(
+135deg,
+rgba(12, 12, 12, 0.96),
+rgba(25, 25, 24, 0.91)
+);
+border: 1px solid rgba(255, 255, 255, 0.18);
+box-shadow:
+0 20px 48px rgba(0, 0, 0, 0.38),
+0 2px 12px var(--header-shadow);
+color: var(--header-text);
+text-align: center;
+}
+
+.instructions-close {
+position: absolute;
+top: 10px;
+right: 12px;
+display: grid;
+place-items: center;
+width: 34px;
+height: 34px;
+padding: 0;
+border: 0;
+background: transparent;
+color: var(--header-text);
+font-family: "Roboto", Arial, sans-serif;
+font-size: 1.8rem;
+font-weight: 400;
+line-height: 1;
+cursor: pointer;
+transition: opacity 180ms ease;
+}
+
+.instructions-close:hover,
+.instructions-close:focus-visible {
+opacity: 0.68;
+}
+
+.instructions-carousel {
+position: relative;
+min-height: 238px;
+}
+
+.instruction-slide {
+position: absolute;
+inset: 0;
+display: grid;
+align-content: center;
+justify-items: center;
+gap: 14px;
+opacity: 0;
+pointer-events: none;
+transform: translateX(16px);
+transition: opacity 360ms ease, transform 360ms ease;
+}
+
+.instruction-slide.is-active {
+opacity: 1;
+pointer-events: auto;
+transform: translateX(0);
+}
+
+.instruction-icon {
+display: grid;
+place-items: center;
+width: 78px;
+height: 78px;
+border: 1px solid rgba(255, 255, 255, 0.2);
+border-radius: 50%;
+}
+
+.instruction-icon img {
+width: 42px;
+height: 42px;
+object-fit: contain;
+}
+
+.instruction-title {
+margin: 0;
+font-size: 0.74rem;
+font-weight: 500;
+letter-spacing: 0.22em;
+line-height: 1.3;
+}
+
+.instruction-text {
+max-width: 310px;
+margin: 0;
+color: rgba(246, 245, 239, 0.86);
+font-size: 0.9rem;
+line-height: 1.55;
+}
+
+.instructions-dots {
+display: flex;
+justify-content: center;
+gap: 8px;
+margin-top: 4px;
+}
+
+.instructions-dot {
+width: 6px;
+height: 6px;
+border-radius: 50%;
+background: rgba(246, 245, 239, 0.35);
+transition: background 220ms ease, transform 220ms ease;
+}
+
+.instructions-dot.is-active {
+background: var(--header-text);
+transform: scale(1.2);
+}
+
 .sr-only {
 position: absolute;
 width: 1px;
@@ -374,6 +514,18 @@ width: 32px;
 .site-nav a:focus-visible {
 opacity: 0.7;
 }
+
+.instructions-popup {
+padding: 18px;
+}
+
+.instructions-dialog {
+padding: 32px 24px 22px;
+}
+
+.instructions-carousel {
+min-height: 250px;
+}
 }
 </style>
 </head>
@@ -413,6 +565,65 @@ aria-pressed="false"
 aria-label="Silenciar audio">
 SONIDO: ACTIVADO
 </button>
+
+<div
+class="instructions-popup"
+id="instructionsPopup"
+role="dialog"
+aria-modal="true"
+aria-labelledby="instructionsTitle">
+
+<div class="instructions-dialog">
+<button
+class="instructions-close"
+id="instructionsClose"
+type="button"
+aria-label="Cerrar instrucciones">
+×
+</button>
+
+<div class="instructions-carousel">
+<section
+class="instruction-slide is-active"
+aria-hidden="false">
+
+<div class="instruction-icon" aria-hidden="true">
+<img src="assets/telefono.png" alt="">
+</div>
+
+<h2 class="instruction-title" id="instructionsTitle">
+DISPOSITIVOS TOUCH
+</h2>
+
+<p class="instruction-text">
+Usa los dos joysticks de la parte inferior: el izquierdo mueve al personaje y el derecho rota la vista.
+</p>
+</section>
+
+<section
+class="instruction-slide"
+aria-hidden="true">
+
+<div class="instruction-icon" aria-hidden="true">
+<img src="assets/pc.png" alt="">
+</div>
+
+<h2 class="instruction-title">
+COMPUTADORA
+</h2>
+
+<p class="instruction-text">
+Muévete con las teclas WASD. Mantén presionado y arrastra el mouse para rotar la vista.
+</p>
+</section>
+</div>
+
+<div class="instructions-dots" aria-hidden="true">
+<span class="instructions-dot is-active"></span>
+<span class="instructions-dot"></span>
+</div>
+</div>
+</div>
 
 <!--Zona para joystick-->
 <div id="joyLeft"></div>
@@ -594,9 +805,16 @@ const siteMenu = document.getElementById('siteMenu');
 const siteHeader = document.getElementById('siteHeader');
 const backgroundAudio = document.getElementById('backgroundAudio');
 const audioToggle = document.getElementById('audioToggle');
+const instructionsPopup = document.getElementById('instructionsPopup');
+const instructionsClose = document.getElementById('instructionsClose');
+const instructionSlides = document.querySelectorAll('.instruction-slide');
+const instructionDots = document.querySelectorAll('.instructions-dot');
 const compactHeaderQuery = window.matchMedia(
 '(max-width: 767px), (max-height: 500px) and (orientation: landscape)'
 );
+
+let currentInstructionSlide = 0;
+let instructionCarouselInterval;
 
 function setSiteMenuState(isOpen) {
 siteMenu.classList.toggle('is-open', isOpen);
@@ -627,6 +845,31 @@ function playBackgroundAudio() {
 backgroundAudio.play().catch(() => {});
 }
 
+function setInstructionSlide(index) {
+instructionSlides.forEach((slide, slideIndex) => {
+const isActive = slideIndex === index;
+
+slide.classList.toggle('is-active', isActive);
+slide.setAttribute('aria-hidden', String(!isActive));
+});
+
+instructionDots.forEach((dot, dotIndex) => {
+dot.classList.toggle('is-active', dotIndex === index);
+});
+}
+
+function showNextInstructionSlide() {
+currentInstructionSlide =
+(currentInstructionSlide + 1) % instructionSlides.length;
+
+setInstructionSlide(currentInstructionSlide);
+}
+
+function closeInstructionsPopup() {
+instructionsPopup.classList.add('is-hidden');
+window.clearInterval(instructionCarouselInterval);
+}
+
 audioToggle.addEventListener('click', () => {
 backgroundAudio.muted = !backgroundAudio.muted;
 updateAudioToggle();
@@ -640,6 +883,13 @@ window.addEventListener('touchend', playBackgroundAudio, true);
 window.addEventListener('pointerdown', playBackgroundAudio, true);
 window.addEventListener('click', playBackgroundAudio, true);
 window.addEventListener('keydown', playBackgroundAudio, true);
+
+instructionsClose.addEventListener('click', closeInstructionsPopup);
+
+instructionCarouselInterval = window.setInterval(
+showNextInstructionSlide,
+4000
+);
 
 playBackgroundAudio();
 
